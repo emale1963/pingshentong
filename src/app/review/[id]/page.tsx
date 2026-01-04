@@ -234,7 +234,7 @@ export default function ReviewPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">AI 正在评审中...</h3>
-              <p className="text-gray-600">请稍候，系统正在智能分析报告内容</p>
+              <p className="text-gray-600">系统正在调用大模型进行智能分析，预计需要 15-30 秒</p>
             </div>
           </div>
         )}

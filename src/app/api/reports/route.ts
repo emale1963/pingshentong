@@ -105,40 +105,37 @@ export async function POST(request: NextRequest) {
 
     const userId = 1; // 暂时硬编码用户ID
 
-    // 尝试使用数据库
-    try {
-      const client = await pool.connect();
-      console.log('[API] Database connected');
-
-      // 插入报告记录
-      const result = await client.query(
+    // 优先使用临时存储（数据库连接可能不可用）
+    const report = tempStorage.createReport({
+      user_id: userId,
+      professions: professions,
+      file_url: objectKey,
+      file_name: file.name,
+      file_size: file.size,
+      status: 'submitted',
+    });
+    
+    console.log('[API] Report created in temp storage:', report);
+    
+    // 尝试同步到数据库（后台操作，不阻塞）
+    pool.connect().then(client => {
+      return client.query(
         `INSERT INTO reports (user_id, professions, file_url, file_name, file_size, status)
          VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING *`,
+         ON CONFLICT DO NOTHING`,
         [userId, professions, objectKey, file.name, file.size, 'submitted']
-      );
-
-      client.release();
-      console.log('[API] Report created in database:', result.rows[0]);
-
-      return NextResponse.json(result.rows[0]);
-    } catch (dbError) {
-      console.error('[API] Database error, using fallback:', dbError);
-      
-      // 降级方案：使用临时内存存储
-      const report = tempStorage.createReport({
-        user_id: userId,
-        professions: professions,
-        file_url: objectKey,
-        file_name: file.name,
-        file_size: file.size,
-        status: 'submitted',
+      ).then(() => {
+        client.release();
+        console.log('[API] Report synced to database');
+      }).catch(dbError => {
+        client.release();
+        console.error('[API] Failed to sync to database:', dbError);
       });
-      
-      console.log('[API] Report created in temp storage:', report);
-      
-      return NextResponse.json(report);
-    }
+    }).catch(dbError => {
+      console.error('[API] Database connection failed, using temp storage only:', dbError);
+    });
+    
+    return NextResponse.json(report);
   } catch (error) {
     console.error('[API] Failed to create report:', error);
     return NextResponse.json(

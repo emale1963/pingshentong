@@ -1,101 +1,42 @@
 # 建筑可研报告智能评审系统
 
-基于 React + Node.js + PostgreSQL 的完整网站系统，用于建筑领域可研报告智能评审。
+## 项目简介
 
-## 核心功能模块
+这是一个基于人工智能的建筑可行性研究报告智能评审系统，通过集成豆包大语言模型，实现对建筑可研报告的自动化、专业化评审。
 
-### 1. 用户前端界面
-- **报告提交页面** (`/`)：上传可研报告文件，填写项目信息
-- **我的报告** (`/reports`)：查看所有提交的报告列表
-- **报告详情** (`/reports/[id]`)：查看 AI 评审结果，包括综合评分、关键问题和改进建议
+### 核心功能
 
-### 2. 后台管理系统
-- **管理首页** (`/admin`)：查看系统统计数据（总报告数、用户数、评审状态）
-- **报告管理** (`/admin/reports`)：查看和管理所有报告，按状态筛选
-- **用户管理** (`/admin/users`)：管理系统用户
-- **评审管理** (`/admin/reviews`)：人工评审和 AI 配置
-- **系统配置** (`/admin/config`)：评审标准和权重配置
+- **报告提交**：支持拖拽上传、多文件格式（PDF、DOC、DOCX）
+- **智能评审**：分专业AI评审（建筑、结构、给排水、电气、暖通、消防、景观、室内、造价）
+- **结果展示**：实时状态更新、分专业Tab切换、详细评审意见展示
+- **报告导出**：支持Word、PDF、Excel多格式导出，自动上传到对象存储
 
-### 3. 数据库设计
-完整的 PostgreSQL 数据库表结构，包括：
-- **users**：用户信息
-- **reports**：可研报告
-- **reviews**：评审记录
-- **review_config**：评审配置
+### 技术栈
 
-Schema 文件：`database/schema.sql`
+- **前端**：Next.js 16 + React 19 + TypeScript 5 + Tailwind CSS 4
+- **后端**：Next.js API Routes + PostgreSQL（可选）
+- **AI服务**：豆包大语言模型（doubao-seed-1-6-251015）
+- **存储**：S3兼容对象存储 + 临时内存存储
 
-### 4. 大模型集成接口
-- 集成豆包大语言模型进行智能评审分析
-- 支持从可行性分析、技术方案、经济指标、环境影响、安全保障、合规性等维度进行评审
-- 自动生成综合评分、关键问题和改进建议
-- 支持流式和非流式响应
+## 快速开始
 
-### 5. 文档处理服务
-- 集成 S3 兼容对象存储服务
-- 支持文件上传、下载、管理
-- 自动生成签名访问 URL
-- 支持多种文件格式（PDF、Word 等）
+### 1. 环境要求
 
-## 技术栈
+- Node.js 24+
+- pnpm（推荐）
 
-- **前端框架**：Next.js 16 (App Router) + React 19
-- **语言**：TypeScript 5
-- **样式**：Tailwind CSS 4
-- **后端**：Node.js + Next.js API Routes
-- **数据库**：PostgreSQL
-- **大模型**：豆包 (Doubao) 大语言模型
-- **对象存储**：S3 兼容存储服务
-- **依赖管理**：pnpm
-
-## 项目结构
-
-```
-.
-├── database/
-│   └── schema.sql                    # 数据库表结构定义
-├── src/
-│   ├── app/
-│   │   ├── api/                      # API 路由
-│   │   │   ├── reports/              # 报告相关 API
-│   │   │   │   ├── route.ts          # 报告列表、创建
-│   │   │   │   └── [id]/
-│   │   │   │       ├── route.ts      # 报告详情、更新
-│   │   │   │       └── review/
-│   │   │   │           └── route.ts  # AI 评审触发
-│   │   │   └── admin/                # 后台管理 API
-│   │   │       ├── stats/route.ts    # 统计数据
-│   │   │       ├── reports/route.ts  # 报告管理
-│   │   │       └── users/route.ts    # 用户管理
-│   │   ├── admin/                    # 后台管理页面
-│   │   ├── reports/                  # 用户报告页面
-│   │   ├── page.tsx                  # 首页（报告提交）
-│   │   ├── layout.tsx                # 根布局
-│   │   └── globals.css               # 全局样式
-│   ├── components/
-│   │   └── Navbar.tsx                # 导航栏组件
-│   ├── lib/
-│   │   └── db.ts                     # 数据库连接配置
-│   └── services/
-│       └── aiReview.ts               # AI 评审服务
-└── README.md
-```
-
-## 初始化数据库
-
-在运行项目前，需要先初始化 PostgreSQL 数据库：
+### 2. 安装依赖
 
 ```bash
-# 连接到数据库并执行 schema.sql
-psql -h <host> -U <user> -d <database> -f database/schema.sql
+pnpm install
 ```
 
-## 环境变量配置
+### 3. 配置环境变量
 
-需要配置以下环境变量（在 `.env.local` 文件中）：
+创建 `.env.local` 文件：
 
 ```env
-# 数据库配置
+# 数据库配置（可选）
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=report_review
@@ -103,93 +44,272 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 
 # 对象存储配置
-COZE_BUCKET_ENDPOINT_URL=<endpoint_url>
-COZE_BUCKET_NAME=<bucket_name>
+COZE_BUCKET_ENDPOINT_URL=your_endpoint_url
+COZE_BUCKET_NAME=your_bucket_name
 ```
 
-## 安装依赖
+### 4. 启动开发服务器
 
 ```bash
-pnpm install
-```
-
-## 运行开发服务器
-
-```bash
-# 开发环境（支持热更新）
-bash .cozeproj/scripts/dev_run.sh
-
-# 或者
-pnpm dev
+bash .cozeproj/scripts/dev_run.sh 2>&1 >/dev/null &
 ```
 
 服务将在 `http://localhost:5000` 启动。
 
-## 构建生产版本
+## 使用指南
 
-```bash
-pnpm build
+### 1. 提交报告
+
+1. 访问首页 `http://localhost:5000`
+2. 点击上传区域或拖拽文件到上传区域
+3. 选择需要评审的专业（可多选）
+4. 点击"提交报告"按钮
+5. 系统将自动触发AI评审
+
+### 2. 查看评审结果
+
+1. 提交成功后，自动跳转到评审页面
+2. 系统显示评审状态：
+   - **评审中**：AI正在分析（约15-30秒）
+   - **已完成**：评审完成，可查看详细意见
+3. 切换不同专业Tab查看各专业的评审意见
+4. 勾选确认已确认的评审意见
+5. 点击"导出报告"按钮导出评审报告
+
+### 3. 导出评审报告
+
+1. 进入导出页面
+2. 选择导出格式（Word、PDF、Excel）
+3. 系统自动生成文档并上传到对象存储
+4. 在导出历史中下载生成的文档
+
+### 4. 我的报告
+
+访问 `/reports` 查看所有已提交的报告列表，包括：
+- 报告名称
+- 评审专业
+- 评审状态
+- 创建时间
+
+## API 文档
+
+### 1. 提交报告
+
+```http
+POST /api/reports
+Content-Type: multipart/form-data
+
+file: 文件（必填）
+professions: JSON数组，如["architecture","structure"]（必填）
 ```
 
-## 主要功能说明
+### 2. 获取报告列表
 
-### 报告提交流程
-1. 用户在首页填写报告标题和项目类型
-2. 上传可研报告文件（PDF 或 Word）
-3. 文件自动上传到对象存储
-4. 系统创建报告记录并返回报告 ID
-5. 后台自动触发 AI 评审分析
+```http
+GET /api/reports
+```
 
-### AI 评审流程
-1. 读取上传的文件内容
-2. 调用豆包大模型进行智能分析
-3. 从 6 个维度进行评审：
-   - 可行性分析（25%）
-   - 技术方案（20%）
-   - 经济指标（20%）
-   - 环境影响（15%）
-   - 安全保障（10%）
-   - 合规性（10%）
-4. 生成综合评分（0-100 分）
-5. 提取关键问题和改进建议
-6. 保存评审结果到数据库
-7. 更新报告状态为"已完成"
+### 3. 获取报告详情
 
-### 后台管理功能
-- 查看系统整体运行状态
-- 管理所有用户的报告
-- 管理系统用户
-- 配置评审标准和权重
+```http
+GET /api/reports/{id}
+```
 
-## API 接口文档
+### 4. 触发评审
 
-### 报告相关
-- `GET /api/reports` - 获取报告列表
-- `POST /api/reports` - 创建新报告（上传文件）
-- `GET /api/reports/[id]` - 获取报告详情
-- `PUT /api/reports/[id]` - 更新报告信息
-- `POST /api/reports/[id]/review` - 触发 AI 评审
+```http
+POST /api/reports/{id}/review
+```
 
-### 后台管理
-- `GET /api/admin/stats` - 获取统计数据
-- `GET /api/admin/reports` - 获取所有报告
-- `GET /api/admin/users` - 获取所有用户
+### 5. 创建导出
 
-## 注意事项
+```http
+POST /api/reports/{id}/exports
+Content-Type: application/json
 
-1. **数据库初始化**：首次运行前必须执行 `database/schema.sql` 初始化数据库表
-2. **环境变量**：确保配置正确的数据库和对象存储连接信息
-3. **大模型调用**：AI 评审功能需要配置大模型服务访问权限
-4. **文件上传限制**：当前限制上传文件最大 50MB
-5. **用户认证**：当前版本暂未实现完整的用户认证系统，待后续完善
+{
+  "export_type": "word" | "pdf" | "excel"
+}
+```
 
-## 后续优化建议
+### 6. 获取导出记录
 
-1. **用户认证**：集成完整的登录注册、JWT 认证系统
-2. **权限控制**：实现基于角色的访问控制（RBAC）
-3. **文件解析**：增强 PDF/Word 文件内容解析能力
-4. **流式响应**：实现 AI 评审结果的流式实时展示
-5. **评审配置**：支持自定义评审标准和权重
-6. **历史版本**：支持报告版本管理和评审历史
-7. **导出功能**：支持评审结果导出为 PDF/Word
-8. **消息通知**：集成邮件/消息通知系统
+```http
+GET /api/reports/{id}/exports
+```
+
+### 7. 系统状态
+
+```http
+GET /api/test/status
+```
+
+## 项目结构
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── page.tsx           # 首页（报告提交）
+│   ├── reports/           # 报告列表
+│   ├── review/[id]/       # 评审页面
+│   ├── export/[id]/       # 导出页面
+│   ├── api/               # API路由
+│   │   ├── reports/       # 报告相关API
+│   │   ├── test/          # 测试API
+│   │   └── admin/         # 管理API
+│   └── layout.tsx         # 全局布局
+├── components/            # React组件
+│   ├── Button.tsx
+│   ├── FileUpload.tsx
+│   ├── Input.tsx
+│   ├── Navbar.tsx
+│   └── ProfessionSelector.tsx
+├── lib/                   # 工具库
+│   ├── db.ts             # 数据库连接
+│   ├── tempStorage.ts    # 临时存储
+│   └── generateReviewReport.ts  # 文档生成
+├── services/              # 服务层
+│   ├── aiReview.ts       # AI评审服务（旧）
+│   └── aiReviewService.ts # AI评审服务（新）
+└── database/             # 数据库脚本
+    └── schema.sql        # 数据库架构
+```
+
+## 数据存储策略
+
+### 临时存储（优先）
+
+系统优先使用内存临时存储，适用于：
+- 开发和测试环境
+- 数据库不可用时的降级方案
+- 需要快速响应的场景
+
+### 数据库（可选）
+
+当PostgreSQL可用时，系统会：
+- 将报告数据同步到数据库
+- 提供持久化存储
+- 支持数据查询和统计
+
+### 对象存储
+
+生成的文档文件会自动上传到S3兼容对象存储：
+- 支持大文件存储
+- 提供签名URL下载
+- 24小时有效期
+
+## AI评审说明
+
+### 评审专业
+
+系统支持以下专业的AI评审：
+
+| 专业 | 英文代码 |
+|------|----------|
+| 建筑 | architecture |
+| 结构 | structure |
+| 给排水 | plumbing |
+| 电气 | electrical |
+| 暖通 | hvac |
+| 消防 | fire |
+| 景观 | landscape |
+| 室内 | interior |
+| 造价 | cost |
+
+### AI模型
+
+- **模型**：doubao-seed-1-6-251015
+- **超时时间**：60秒
+- **温度**：0.7
+- **思维链**：启用
+
+### 评审内容
+
+每个专业的评审包括：
+1. **AI整体分析**：该专业的综合评价
+2. **综合评分**：75-95分之间的评分
+3. **评审意见**：
+   - 问题描述
+   - 规范依据
+   - 严重程度（高/中/低）
+   - 建议修改方案
+
+## 错误处理
+
+系统实现了完善的错误处理机制：
+
+1. **数据库连接失败**：自动降级到临时存储
+2. **AI评审失败**：使用模拟数据或默认评审
+3. **对象存储失败**：生成文档失败但保留导出记录
+4. **网络错误**：提供友好的错误提示
+
+## 开发指南
+
+### 添加新的评审专业
+
+1. 在 `src/services/aiReviewService.ts` 中添加专业提示词
+2. 在 `src/lib/tempStorage.ts` 中添加模拟数据
+3. 在 `src/components/ProfessionSelector.tsx` 中添加专业选项
+
+### 修改AI提示词
+
+编辑 `src/services/aiReviewService.ts` 中的 `PROFESSION_PROMPTS` 对象。
+
+### 自定义文档格式
+
+修改 `src/lib/generateReviewReport.ts` 中的文档生成逻辑。
+
+## 测试
+
+### 运行测试
+
+```bash
+# 测试系统状态
+curl http://localhost:5000/api/test/status
+
+# 测试提交报告
+curl -X POST -F "file=@test.pdf" -F 'professions=["architecture"]' http://localhost:5000/api/reports
+
+# 测试触发评审
+curl -X POST http://localhost:5000/api/reports/{id}/review
+```
+
+## 部署
+
+### 构建项目
+
+```bash
+pnpm run build
+```
+
+### 启动生产服务
+
+```bash
+bash .cozeproj/scripts/deploy_run.sh
+```
+
+## 常见问题
+
+### Q1: 数据库连接失败怎么办？
+
+A: 系统会自动使用临时存储，不影响正常使用。如需启用数据库，请检查PostgreSQL服务是否运行，并确认环境变量配置正确。
+
+### Q2: AI评审很慢怎么办？
+
+A: AI评审通常需要15-30秒，这是正常现象。如果超过60秒，系统会使用降级方案。
+
+### Q3: 导出的PDF格式为什么是Word文档？
+
+A: 当前版本PDF和Excel格式实际生成的是Word文档，后续版本将支持真正的PDF和Excel导出。
+
+### Q4: 临时存储的数据会丢失吗？
+
+A: 是的，临时存储在服务重启后会丢失。如需持久化，请配置PostgreSQL数据库。
+
+## 许可证
+
+MIT License
+
+## 联系方式
+
+如有问题或建议，请联系项目维护者。

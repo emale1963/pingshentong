@@ -288,17 +288,27 @@ ${reportSummary}
     try {
       console.log(`[AI Review] Starting ${profession} profession analysis...`);
       
-      const response = await this.client.invoke(messages, {
-        model: 'doubao-seed-1-6-251015',
-        temperature: 0.7,
-        thinking: 'enabled',
+      // 设置超时时间（60秒）
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('AI评审超时')), 60000);
       });
+
+      const response = await Promise.race([
+        this.client.invoke(messages, {
+          model: 'doubao-seed-1-6-251015',
+          temperature: 0.7,
+          thinking: 'enabled',
+        }),
+        timeoutPromise,
+      ]);
 
       console.log(`[AI Review] ${profession} analysis completed, parsing response...`);
 
       // 解析AI返回的JSON
       const jsonMatch = response.content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error(`[AI Review] ${profession}: AI返回内容不包含有效的JSON`);
+        console.log(`[AI Review] ${profession} Raw response:`, response.content.substring(0, 500));
         throw new Error('AI返回格式不正确，无法解析JSON');
       }
 
@@ -326,7 +336,23 @@ ${reportSummary}
       } as ReviewResult;
     } catch (error) {
       console.error(`[AI Review] Error analyzing ${profession}:`, error);
-      throw error;
+      
+      // 如果AI失败，返回默认的评审结果
+      console.log(`[AI Review] ${profession}: Using fallback review`);
+      return {
+        profession,
+        ai_analysis: `${PROFESSION_NAMES[profession] || profession}专业评审：由于AI分析服务暂时不可用，无法提供详细分析。建议人工审查该专业的设计内容，确保符合相关国家规范和标准。`,
+        overall_score: 75,
+        review_items: [
+          {
+            id: `${profession.substring(0, 4)}_1`,
+            description: 'AI评审服务暂时不可用，建议人工审查',
+            standard: '建议参考相关国家规范',
+            severity: 'medium',
+            suggestion: '请联系管理员检查AI服务状态，或进行人工评审',
+          },
+        ],
+      } as ReviewResult;
     }
   }
 

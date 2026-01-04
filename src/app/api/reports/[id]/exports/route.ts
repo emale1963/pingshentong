@@ -115,7 +115,11 @@ export async function POST(
 
     // 创建导出记录
     const exportId = exportIdCounter++;
-    const fileName = `评审报告_${report.id}_${new Date().getTime()}.${export_type}`;
+    // 使用正确的文件扩展名
+    const fileExtension = export_type === 'word' ? 'docx' : 
+                          export_type === 'pdf' ? 'pdf' : 
+                          export_type === 'excel' ? 'xlsx' : 'docx';
+    const fileName = `评审报告_${report.id}_${new Date().getTime()}.${fileExtension}`;
     
     const exportRecord = {
       id: exportId,

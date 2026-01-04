@@ -94,9 +94,24 @@ export default function ExportPage() {
       if (response.ok) {
         const result = await response.json();
         // 刷新导出列表
-        fetchData();
+        await fetchData();
+        
+        // 启动轮询检查导出状态
+        const checkInterval = setInterval(async () => {
+          await fetchData();
+          const updatedExports = exports.find(e => e.id === result.id);
+          if (updatedExports && updatedExports.status !== 'pending') {
+            clearInterval(checkInterval);
+            if (updatedExports.status === 'completed') {
+              alert('文档生成成功！');
+            } else {
+              alert('文档生成失败，请重试');
+            }
+          }
+        }, 2000);
       } else {
-        alert('导出失败，请重试');
+        const error = await response.json();
+        alert(error.error || '导出失败，请重试');
       }
     } catch (error) {
       console.error('Export error:', error);
