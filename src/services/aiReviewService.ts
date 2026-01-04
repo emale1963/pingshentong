@@ -303,7 +303,7 @@ ${reportSummary}
 
       const response = await Promise.race([
         this.getClient().invoke(messages, {
-          model: 'doubao-seed-1-6-251015',
+          model: 'kimi-k2-251230',
           temperature: 0.7,
           thinking: 'enabled',
         }),
