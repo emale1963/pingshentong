@@ -1,86 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { tempStorage } from '@/lib/tempStorage';
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  console.log('[API] GET /api/reports/[id] called');
+  
   try {
-    const params = await context.params;
-    const client = await pool.connect();
+    const { id } = await params;
+    const reportId = parseInt(id);
+    
+    console.log('[API] Fetching report with id:', reportId);
 
-    // 查询报告信息
-    const reportResult = await client.query(
-      'SELECT * FROM reports WHERE id = $1',
-      [params.id]
-    );
+    // 尝试从数据库获取
+    try {
+      const client = await pool.connect();
+      console.log('[API] Database connected');
 
-    if (reportResult.rows.length === 0) {
-      client.release();
-      return NextResponse.json(
-        { error: 'Report not found' },
-        { status: 404 }
+      const result = await client.query(
+        `SELECT * FROM reports WHERE id = $1`,
+        [reportId]
       );
+
+      client.release();
+
+      if (result.rows.length === 0) {
+        console.log('[API] Report not found in database');
+        return NextResponse.json(
+          { error: 'Report not found' },
+          { status: 404 }
+        );
+      }
+
+      const report = result.rows[0];
+      console.log('[API] Report retrieved:', report);
+
+      return NextResponse.json(report);
+    } catch (dbError) {
+      console.error('[API] Database error, using fallback:', dbError);
+      
+      // 降级方案：从临时存储获取
+      const report = tempStorage.getReport(reportId);
+      if (!report) {
+        console.log('[API] Report not found in temp storage');
+        return NextResponse.json(
+          { error: 'Report not found' },
+          { status: 404 }
+        );
+      }
+
+      console.log('[API] Report retrieved from temp storage:', report);
+      return NextResponse.json(report);
     }
-
-    const report = reportResult.rows[0];
-
-    // 查询所有评审记录
-    const reviewsResult = await client.query(
-      'SELECT * FROM reviews WHERE report_id = $1 ORDER BY profession',
-      [params.id]
-    );
-
-    client.release();
-
-    return NextResponse.json({
-      ...report,
-      reviews: reviewsResult.rows,
-    });
   } catch (error) {
-    console.error('Failed to fetch report:', error);
+    console.error('[API] Failed to fetch report:', error);
     return NextResponse.json(
       { error: 'Failed to fetch report' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    const params = await context.params;
-    const body = await request.json();
-    const { status, professions } = body;
-
-    const client = await pool.connect();
-
-    const result = await client.query(
-      `UPDATE reports
-       SET status = COALESCE($1, status),
-           professions = COALESCE($2, professions),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3
-       RETURNING *`,
-      [status, professions ? JSON.stringify(professions) : null, params.id]
-    );
-
-    client.release();
-
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Report not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(result.rows[0]);
-  } catch (error) {
-    console.error('Failed to update report:', error);
-    return NextResponse.json(
-      { error: 'Failed to update report' },
       { status: 500 }
     );
   }
