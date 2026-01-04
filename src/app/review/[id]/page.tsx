@@ -85,7 +85,7 @@ export default function ReviewPage() {
 
   const handleConfirmItem = async (profession: string, itemId: string) => {
     try {
-      await fetch(`/api/reviews/${report?.id}/${profession}/confirm`, {
+      await fetch(`/api/reports/${report?.id}/reviews/${profession}/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itemId }),
