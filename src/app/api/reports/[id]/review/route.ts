@@ -13,7 +13,11 @@ export async function POST(
     const { id } = await params;
     const reportId = parseInt(id);
     
-    console.log('[API] Starting review for report:', reportId);
+    // 解析请求体，获取模型参数
+    const body = await request.json().catch(() => ({}));
+    const modelType = body.modelType || 'kimi-k2'; // 默认使用 Kimi-K2
+    
+    console.log('[API] Starting review for report:', reportId, 'with model:', modelType);
 
     let reportData: any = null;
 
@@ -60,12 +64,13 @@ export async function POST(
     }
 
     // 异步进行AI评审
-    performAIReview(reportId, reportData);
+    performAIReview(reportId, reportData, modelType);
 
     return NextResponse.json({ 
       message: 'Review started', 
       status: 'reviewing',
-      professions: reportData.professions 
+      professions: reportData.professions,
+      modelType 
     });
   } catch (error) {
     console.error('[API] Failed to start review:', error);
@@ -76,9 +81,9 @@ export async function POST(
   }
 }
 
-async function performAIReview(reportId: number, reportData: any) {
+async function performAIReview(reportId: number, reportData: any, modelType: string) {
   try {
-    console.log('[AI Review] Starting AI review for report:', reportId);
+    console.log('[AI Review] Starting AI review for report:', reportId, 'with model:', modelType);
 
     const professions = reportData.professions || [];
     const fileName = reportData.file_name || '未命名报告';
@@ -94,7 +99,7 @@ async function performAIReview(reportId: number, reportData: any) {
 注意：由于无法获取报告详细内容，请基于报告名称和涉及的评审专业进行常规性评审，重点检查常见的设计问题和规范符合性。`;
 
     // 调用AI服务进行评审
-    const reviewResults = await aiReviewService.analyzeReport(professions, reportSummary);
+    const reviewResults = await aiReviewService.analyzeReport(professions, reportSummary, modelType as any);
 
     console.log('[AI Review] AI analysis completed, processing results...');
 

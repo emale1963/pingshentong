@@ -16,6 +16,14 @@ const PROFESSION_NAMES: Record<string, string> = {
   cost: '造价',
 };
 
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  provider: string;
+  isDefault: boolean;
+}
+
 interface ReviewItem {
   id: string;
   description: string;
@@ -52,12 +60,34 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
+  const [modelsLoading, setModelsLoading] = useState(false);
 
   useEffect(() => {
     fetchReport();
+    fetchModels();
     const interval = setInterval(fetchReport, 3000); // 每3秒刷新一次
     return () => clearInterval(interval);
   }, [params.id]);
+
+  const fetchModels = async () => {
+    try {
+      setModelsLoading(true);
+      const response = await fetch('/api/models');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableModels(data.models);
+        if (data.defaultModel) {
+          setSelectedModel(data.defaultModel);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch models:', error);
+    } finally {
+      setModelsLoading(false);
+    }
+  };
 
   const fetchReport = async () => {
     try {
@@ -102,6 +132,8 @@ export default function ReviewPage() {
     try {
       const response = await fetch(`/api/reports/${params.id}/review`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelType: selectedModel }),
       });
 
       if (response.ok) {
@@ -218,14 +250,55 @@ export default function ReviewPage() {
       {/* 状态提示和操作按钮 */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         {report.status === 'submitted' && (
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">等待评审</h3>
-              <p className="text-gray-600">报告已提交，点击下方按钮开始 AI 智能评审</p>
+          <div className="space-y-6">
+            {/* 模型选择器 */}
+            <div className="border-b border-gray-200 pb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">选择 AI 模型</h3>
+              {modelsLoading ? (
+                <div className="text-gray-500">加载模型列表中...</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {availableModels.map((model) => (
+                    <div
+                      key={model.id}
+                      onClick={() => setSelectedModel(model.id)}
+                      className={`
+                        p-4 border-2 rounded-lg cursor-pointer transition-all
+                        ${selectedModel === model.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                        }
+                      `}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">{model.name}</h4>
+                        {selectedModel === model.id && (
+                          <span className="text-blue-500">✓</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{model.description}</p>
+                      <p className="text-xs text-gray-500">提供商: {model.provider}</p>
+                      {model.isDefault && (
+                        <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          默认
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <Button onClick={handleTriggerReview}>
-              开始评审
-            </Button>
+
+            {/* 开始评审按钮 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">等待评审</h3>
+                <p className="text-gray-600">报告已提交，选择模型后点击下方按钮开始 AI 智能评审</p>
+              </div>
+              <Button onClick={handleTriggerReview}>
+                开始评审
+              </Button>
+            </div>
           </div>
         )}
 

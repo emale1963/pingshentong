@@ -1,15 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FileUpload from '@/components/FileUpload';
 import ProfessionSelector from '@/components/ProfessionSelector';
 import Button from '@/components/Button';
+
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  provider: string;
+  isDefault: boolean;
+}
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [professions, setProfessions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
+  const [modelsLoading, setModelsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  const fetchModels = async () => {
+    try {
+      setModelsLoading(true);
+      const response = await fetch('/api/models');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableModels(data.models);
+        if (data.defaultModel) {
+          setSelectedModel(data.defaultModel);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch models:', error);
+    } finally {
+      setModelsLoading(false);
+    }
+  };
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -60,6 +93,8 @@ export default function Home() {
         try {
           const reviewResponse = await fetch(`/api/reports/${result.id}/review`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modelType: selectedModel }),
           });
           
           if (reviewResponse.ok) {
@@ -125,6 +160,47 @@ export default function Home() {
               label="选择评审专业"
               disabled={isSubmitting}
             />
+          </div>
+
+          {/* AI模型选择 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              选择 AI 模型
+            </label>
+            {modelsLoading ? (
+              <div className="text-center py-8 text-gray-500">加载模型列表中...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {availableModels.map((model) => (
+                  <div
+                    key={model.id}
+                    onClick={() => !isSubmitting && setSelectedModel(model.id)}
+                    className={`
+                      p-4 border-2 rounded-lg cursor-pointer transition-all
+                      ${selectedModel === model.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                      }
+                      ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">{model.name}</h4>
+                      {selectedModel === model.id && (
+                        <span className="text-blue-500 text-xl">✓</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">{model.description}</p>
+                    <p className="text-xs text-gray-500">提供商: {model.provider}</p>
+                    {model.isDefault && (
+                      <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                        默认
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 上传进度 */}

@@ -19,8 +19,10 @@ const PROFESSIONS = [
   { id: 'landscape', name: '景观', icon: '🌳' },
   { id: 'interior', name: '室内', icon: '🏠' },
   { id: 'cost', name: '造价', icon: '💰' },
-  { id: 'all', name: '全专业', icon: '📋' },
 ];
+
+// 全专业对应的实际工程专业列表
+const ALL_PROFESSIONS = PROFESSIONS.map(p => p.id);
 
 export default function ProfessionSelector({
   selectedProfessions,
@@ -33,24 +35,32 @@ export default function ProfessionSelector({
 
     const isSelected = selectedProfessions.includes(professionId);
 
-    if (professionId === 'all') {
-      // 全专业选择
-      if (isSelected) {
-        onChange([]);
-      } else {
-        onChange(['all']);
-      }
+    if (isSelected) {
+      // 取消选择
+      const newSelection = selectedProfessions.filter((id) => id !== professionId);
+      onChange(newSelection);
     } else {
-      // 其他专业选择
-      let newSelection;
-      if (isSelected) {
-        newSelection = selectedProfessions.filter((id) => id !== professionId);
-      } else {
-        newSelection = [...selectedProfessions.filter((id) => id !== 'all'), professionId];
-      }
+      // 添加选择
+      const newSelection = [...selectedProfessions, professionId];
       onChange(newSelection);
     }
   };
+
+  const handleSelectAll = () => {
+    if (disabled) return;
+
+    // 检查是否已经选择了所有专业
+    const allSelected = ALL_PROFESSIONS.every(id => selectedProfessions.includes(id));
+
+    if (allSelected) {
+      onChange([]); // 如果已全选，则清空
+    } else {
+      onChange([...ALL_PROFESSIONS]); // 否则选择所有专业
+    }
+  };
+
+  const isAllSelected = ALL_PROFESSIONS.every(id => selectedProfessions.includes(id));
+  const isSomeSelected = selectedProfessions.length > 0 && !isAllSelected;
 
   return (
     <div className="w-full">
@@ -60,6 +70,42 @@ export default function ProfessionSelector({
         </label>
       )}
 
+      {/* 全专业按钮 */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={handleSelectAll}
+          disabled={disabled}
+          className={`
+            w-full py-3 px-4 rounded-lg border-2 font-medium transition-all duration-200 flex items-center justify-center gap-2
+            ${isAllSelected
+              ? 'border-green-500 bg-green-50 text-green-700'
+              : isSomeSelected
+              ? 'border-gray-300 bg-white text-gray-700 hover:border-green-400 hover:bg-green-50'
+              : 'border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50'
+            }
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          `}
+        >
+          <span className="text-xl">📋</span>
+          <span>
+            {isAllSelected ? '已选择全专业 (点击清空)' : 
+             isSomeSelected ? '选择全专业 (覆盖当前选择)' : 
+             '选择全专业分析'}
+          </span>
+          {isAllSelected && (
+            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* 专业选择按钮 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
         {PROFESSIONS.map((profession) => {
           const isSelected = selectedProfessions.includes(profession.id);
@@ -97,10 +143,14 @@ export default function ProfessionSelector({
         })}
       </div>
 
+      {/* 已选择提示 */}
       {selectedProfessions.length > 0 && (
-        <p className="mt-2 text-sm text-gray-600">
-          已选择: {selectedProfessions.map(id => PROFESSIONS.find(p => p.id === id)?.name).join(', ')}
-        </p>
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <span className="font-medium">已选择 {selectedProfessions.length} 个专业：</span>
+            {selectedProfessions.map(id => PROFESSIONS.find(p => p.id === id)?.name).join('、')}
+          </p>
+        </div>
       )}
     </div>
   );
