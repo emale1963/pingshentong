@@ -85,7 +85,7 @@ export default function ExportPage() {
     setGenerating(true);
 
     try {
-      const response = await fetch(`/api/reports/${params.id}/export`, {
+      const response = await fetch(`/api/reports/${params.id}/exports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ export_type: type }),

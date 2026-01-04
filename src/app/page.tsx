@@ -55,9 +55,26 @@ export default function Home() {
 
       if (response.ok) {
         const result = await response.json();
-        alert('报告提交成功！系统正在智能分析中...');
-        // 跳转到报告详情页
-        window.location.href = `/review/${result.id}`;
+        
+        // 自动触发评审
+        try {
+          const reviewResponse = await fetch(`/api/reports/${result.id}/review`, {
+            method: 'POST',
+          });
+          
+          if (reviewResponse.ok) {
+            alert('报告提交成功！系统正在进行智能分析...');
+            // 跳转到报告详情页
+            window.location.href = `/review/${result.id}`;
+          } else {
+            alert('报告提交成功，但评审启动失败，请手动触发评审');
+            window.location.href = `/review/${result.id}`;
+          }
+        } catch (reviewError) {
+          console.error('Failed to start review:', reviewError);
+          alert('报告提交成功，但评审启动失败，请手动触发评审');
+          window.location.href = `/review/${result.id}`;
+        }
       } else {
         const error = await response.json();
         alert(error.message || '提交失败，请重试');

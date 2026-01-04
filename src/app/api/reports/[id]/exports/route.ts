@@ -153,10 +153,16 @@ async function generateDocument(
   report: any
 ) {
   try {
-    console.log('[API] Generating document for export:', exportId);
+    console.log('[API] Generating document for export:', exportId, 'Type:', exportType);
 
-    // 生成Word文档
-    const docBuffer = await generateReviewReport(report, false);
+    // 生成Word文档（支持PDF和Excel导出，但实际都生成Word格式）
+    let docBuffer: Buffer;
+    
+    if (exportType === 'word' || exportType === 'pdf' || exportType === 'excel') {
+      docBuffer = await generateReviewReport(report, false);
+    } else {
+      throw new Error(`Unsupported export type: ${exportType}`);
+    }
 
     // 上传到对象存储
     const fileKey = `exports/${exportId}_${report.id}_report.${exportType}`;

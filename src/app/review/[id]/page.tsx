@@ -252,7 +252,24 @@ export default function ReviewPage() {
 
       {/* 评审结果 */}
       {report.status === 'completed' && report.reviews.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div>
+          {/* 导出快捷按钮 */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-blue-900">评审已完成</h3>
+              <p className="text-blue-700 text-sm">您可以导出评审报告或继续查看详细评审意见</p>
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => router.push(`/export/${report.id}`)}
+              >
+                导出报告
+              </Button>
+            </div>
+          </div>
+
+          {/* 评审详情 */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* 专业标签页 */}
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px overflow-x-auto">
@@ -368,11 +385,17 @@ export default function ReviewPage() {
                   variant="secondary"
                   onClick={() => router.push(`/export/${report.id}`)}
                 >
+                  查看导出历史
+                </Button>
+                <Button
+                  onClick={() => router.push(`/export/${report.id}`)}
+                >
                   导出评审报告
                 </Button>
               </div>
             </div>
           )}
+        </div>
         </div>
       )}
     </div>
