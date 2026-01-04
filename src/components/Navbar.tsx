@@ -16,18 +16,20 @@ export default function Navbar() {
               建筑可研评审
             </Link>
           </div>
-          <div className="flex space-x-4">
+          <div className="hidden md:flex space-x-4">
             <Link
               href="/"
               className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition ${
-                !isAdmin ? 'bg-blue-800' : ''
+                !isAdmin && pathname === '/' ? 'bg-blue-800' : ''
               }`}
             >
               报告提交
             </Link>
             <Link
               href="/reports"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition"
+              className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition ${
+                pathname === '/reports' ? 'bg-blue-800' : ''
+              }`}
             >
               我的报告
             </Link>
@@ -40,8 +42,17 @@ export default function Navbar() {
               后台管理
             </Link>
           </div>
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/login"
+              className="px-4 py-2 bg-blue-700 text-white rounded-md text-sm font-medium hover:bg-blue-800 transition"
+            >
+              登录
+            </Link>
+          </div>
         </div>
       </div>
     </nav>
   );
 }
+

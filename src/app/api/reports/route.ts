@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // 查询所有报告，按创建时间倒序
     const result = await client.query(
-      `SELECT id, user_id, title, project_type, status, file_name, created_at
+      `SELECT id, user_id, professions, status, file_name, created_at
        FROM reports
        ORDER BY created_at DESC`
     );
@@ -38,12 +38,22 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const title = formData.get('title') as string;
-    const projectType = formData.get('project_type') as string;
+    const professionsStr = formData.get('professions') as string;
 
-    if (!file || !title) {
+    if (!file) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // 解析专业选择
+    let professions: string[] = [];
+    try {
+      professions = JSON.parse(professionsStr || '[]');
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'Invalid professions format' },
         { status: 400 }
       );
     }
@@ -75,10 +85,10 @@ export async function POST(request: NextRequest) {
 
     // 插入报告记录
     const result = await client.query(
-      `INSERT INTO reports (user_id, title, project_type, file_url, file_name, file_size, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO reports (user_id, professions, file_url, file_name, file_size, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [userId, title, projectType, fileUrl, file.name, file.size, 'submitted']
+      [userId, professions, fileUrl, file.name, file.size, 'submitted']
     );
 
     client.release();

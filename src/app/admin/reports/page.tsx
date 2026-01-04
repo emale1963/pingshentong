@@ -3,11 +3,23 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
+const PROFESSION_NAMES: Record<string, string> = {
+  architecture: '建筑',
+  structure: '结构',
+  plumbing: '给排水',
+  electrical: '电气',
+  hvac: '暖通',
+  fire: '消防',
+  landscape: '景观',
+  interior: '室内',
+  cost: '造价',
+  all: '全专业',
+};
+
 interface Report {
   id: number;
-  title: string;
   user_id: number;
-  project_type: string;
+  professions: string[];
   status: string;
   created_at: string;
   file_name: string;
@@ -55,6 +67,10 @@ export default function AdminReports() {
     ? reports
     : reports.filter(r => r.status === filter);
 
+  const getProfessionTags = (professions: string[]) => {
+    return professions.map(p => PROFESSION_NAMES[p] || p).join('、');
+  };
+
   return (
     <div className="max-w-7xl mx-auto py-12 px-4">
       <div className="flex items-center justify-between mb-8">
@@ -98,10 +114,10 @@ export default function AdminReports() {
                   ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  报告标题
+                  文件名
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  项目类型
+                  评审专业
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   用户ID
@@ -124,10 +140,10 @@ export default function AdminReports() {
                     {report.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {report.title}
+                    {report.file_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {report.project_type || '-'}
+                    {report.professions.length > 0 ? getProfessionTags(report.professions) : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {report.user_id}
@@ -140,7 +156,7 @@ export default function AdminReports() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
-                      href={`/reports/${report.id}`}
+                      href={`/review/${report.id}`}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       查看

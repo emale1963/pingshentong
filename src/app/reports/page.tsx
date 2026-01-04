@@ -3,10 +3,22 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
+const PROFESSION_NAMES: Record<string, string> = {
+  architecture: '建筑',
+  structure: '结构',
+  plumbing: '给排水',
+  electrical: '电气',
+  hvac: '暖通',
+  fire: '消防',
+  landscape: '景观',
+  interior: '室内',
+  cost: '造价',
+  all: '全专业',
+};
+
 interface Report {
   id: number;
-  title: string;
-  project_type: string;
+  professions: string[];
   status: string;
   created_at: string;
   file_name: string;
@@ -47,6 +59,10 @@ export default function MyReports() {
         {statusInfo.label}
       </span>
     );
+  };
+
+  const getProfessionTags = (professions: string[]) => {
+    return professions.map(p => PROFESSION_NAMES[p] || p).join('、');
   };
 
   return (
@@ -90,20 +106,19 @@ export default function MyReports() {
             {reports.map((report) => (
               <li key={report.id}>
                 <Link
-                  href={`/reports/${report.id}`}
+                  href={`/review/${report.id}`}
                   className="block hover:bg-gray-50 transition"
                 >
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-blue-600 truncate">
-                          {report.title}
+                          {report.file_name}
                         </p>
                         <p className="mt-1 flex items-center text-sm text-gray-500">
-                          <span className="mr-2">{report.file_name}</span>
-                          {report.project_type && (
-                            <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">
-                              {report.project_type}
+                          {report.professions.length > 0 && (
+                            <span className="mr-2 px-2 py-0.5 bg-blue-50 rounded text-xs text-blue-700">
+                              {getProfessionTags(report.professions)}
                             </span>
                           )}
                         </p>

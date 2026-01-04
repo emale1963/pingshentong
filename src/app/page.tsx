@@ -1,25 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import FileUpload from '@/components/FileUpload';
+import ProfessionSelector from '@/components/ProfessionSelector';
+import Button from '@/components/Button';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [projectType, setProjectType] = useState('');
-  const [title, setTitle] = useState('');
+  const [professions, setProfessions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
+  const handleFileSelect = (selectedFile: File) => {
+    setFile(selectedFile);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) {
-      alert('请填写完整信息并上传文件');
+    if (!file) {
+      alert('请上传文件');
+      return;
+    }
+    if (professions.length === 0) {
+      alert('请选择评审专业');
       return;
     }
 
@@ -29,8 +32,7 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('title', title);
-      formData.append('project_type', projectType);
+      formData.append('professions', JSON.stringify(professions));
 
       // 模拟上传进度
       const progressInterval = setInterval(() => {
@@ -55,7 +57,7 @@ export default function Home() {
         const result = await response.json();
         alert('报告提交成功！系统正在智能分析中...');
         // 跳转到报告详情页
-        window.location.href = `/reports/${result.id}`;
+        window.location.href = `/review/${result.id}`;
       } else {
         const error = await response.json();
         alert(error.message || '提交失败，请重试');
@@ -69,125 +71,85 @@ export default function Home() {
     }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          提交可研报告
-        </h1>
-        <p className="text-gray-600 mb-8">
-          上传建筑可研报告，系统将使用AI进行智能评审分析
-        </p>
+  const handleReset = () => {
+    setFile(null);
+    setProfessions([]);
+    setUploadProgress(0);
+  };
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+  return (
+    <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            提交可研报告
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            上传建筑可研报告，选择评审专业，系统将使用AI进行智能评审分析
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* 文件上传 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              报告标题 *
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="请输入报告标题"
-              required
+            <FileUpload
+              onFileSelect={handleFileSelect}
+              accept=".pdf,.doc,.docx"
+              maxSize={50}
+              disabled={isSubmitting}
             />
           </div>
 
+          {/* 专业选择 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              项目类型
-            </label>
-            <select
-              value={projectType}
-              onChange={(e) => setProjectType(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">请选择项目类型</option>
-              <option value="住宅建筑">住宅建筑</option>
-              <option value="商业建筑">商业建筑</option>
-              <option value="工业建筑">工业建筑</option>
-              <option value="公共建筑">公共建筑</option>
-              <option value="基础设施">基础设施</option>
-              <option value="其他">其他</option>
-            </select>
+            <ProfessionSelector
+              selectedProfessions={professions}
+              onChange={setProfessions}
+              label="选择评审专业"
+              disabled={isSubmitting}
+            />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              上传文件 *
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-500 transition">
-              <div className="space-y-1 text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div className="flex text-sm text-gray-600">
-                  <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                    <span>选择文件</span>
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileChange}
-                      className="sr-only"
-                      required
-                    />
-                  </label>
-                  <p className="pl-1">或拖拽文件至此</p>
-                </div>
-                <p className="text-xs text-gray-500">
-                  支持 PDF、Word 格式，最大 50MB
-                </p>
-                {file && (
-                  <p className="text-sm text-green-600 mt-2">
-                    已选择: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
+          {/* 上传进度 */}
           {isSubmitting && uploadProgress > 0 && (
-            <div className="bg-gray-200 rounded-full h-2.5">
+            <div className="bg-gray-200 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
           )}
 
-          <div className="flex justify-end space-x-4">
-            <button
+          {/* 提交按钮 */}
+          <div className="flex justify-end space-x-4 pt-4">
+            <Button
               type="button"
-              onClick={() => {
-                setFile(null);
-                setTitle('');
-                setProjectType('');
-                setUploadProgress(0);
-              }}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              variant="secondary"
+              onClick={handleReset}
+              disabled={isSubmitting}
             >
               重置
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              loading={isSubmitting}
+              disabled={!file || professions.length === 0}
             >
               {isSubmitting ? '提交中...' : '提交报告'}
-            </button>
+            </Button>
           </div>
         </form>
+      </div>
+
+      {/* 提示信息 */}
+      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-blue-900 mb-3">使用说明</h3>
+        <ul className="space-y-2 text-sm text-blue-800">
+          <li>• 支持上传 PDF、DOC、DOCX 格式文件，最大 50MB</li>
+          <li>• 可选择一个或多个专业进行评审，选择"全专业"将覆盖其他选项</li>
+          <li>• 提交后系统将自动进行 AI 智能评审分析</li>
+          <li>• 评审完成后可在评审页面查看详细的分析结果</li>
+        </ul>
       </div>
     </div>
   );

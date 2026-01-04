@@ -9,6 +9,7 @@ export default function AdminDashboard() {
     totalUsers: 0,
     completedReports: 0,
     reviewingReports: 0,
+    totalReviews: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +56,12 @@ export default function AdminDashboard() {
       icon: '⏳',
       color: 'bg-yellow-500',
     },
+    {
+      title: '评审意见数',
+      value: stats.totalReviews,
+      icon: '💬',
+      color: 'bg-pink-500',
+    },
   ];
 
   return (
@@ -62,7 +69,7 @@ export default function AdminDashboard() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">后台管理</h1>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
         {statCards.map((card) => (
           <div key={card.title} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center">
