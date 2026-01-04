@@ -246,11 +246,19 @@ interface ReviewResult {
 }
 
 export class AIReviewService {
-  private client: LLMClient;
+  private client?: LLMClient;
 
-  constructor() {
-    const config = new Config();
-    this.client = new LLMClient(config);
+  private getClient(): LLMClient {
+    if (!this.client) {
+      try {
+        const config = new Config();
+        this.client = new LLMClient(config);
+      } catch (error) {
+        console.error('[AI Review Service] Failed to initialize LLM client:', error);
+        throw new Error('AI服务初始化失败：缺少API密钥配置');
+      }
+    }
+    return this.client;
   }
 
   async analyzeProfession(
@@ -294,7 +302,7 @@ ${reportSummary}
       });
 
       const response = await Promise.race([
-        this.client.invoke(messages, {
+        this.getClient().invoke(messages, {
           model: 'doubao-seed-1-6-251015',
           temperature: 0.7,
           thinking: 'enabled',
