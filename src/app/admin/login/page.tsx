@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
@@ -10,38 +10,47 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // 页面加载时清除错误
+  useEffect(() => {
+    setError('');
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    try {
-      console.log('[Login] Attempting login with username:', username);
+    console.log('[Login] 开始登录流程');
+    console.log('[Login] 用户名:', username);
+    console.log('[Login] 密码长度:', password.length);
 
+    try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
-        credentials: 'include', // 确保包含cookies
+        credentials: 'include',
       });
 
-      console.log('[Login] Response status:', response.status);
+      console.log('[Login] 响应状态:', response.status);
+      console.log('[Login] 响应OK:', response.ok);
 
       const data = await response.json();
-      console.log('[Login] Response data:', data);
+      console.log('[Login] 响应数据:', data);
 
       if (response.ok && data.success) {
-        console.log('[Login] Login successful, redirecting to dashboard');
-        // 登录成功，跳转到后台首页
+        console.log('[Login] 登录成功，准备跳转');
+        // 等待一小段时间确保cookie被设置
+        await new Promise(resolve => setTimeout(resolve, 200));
         router.push('/admin/dashboard');
       } else {
-        console.log('[Login] Login failed:', data.error);
+        console.log('[Login] 登录失败:', data.error);
         setError(data.error || '登录失败，请检查用户名和密码');
       }
     } catch (error) {
-      console.error('[Login] Network error:', error);
+      console.error('[Login] 网络错误:', error);
       setError('网络错误，请稍后重试');
     } finally {
       setLoading(false);
@@ -103,7 +112,7 @@ export default function AdminLogin() {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>默认账号：admin / 111111</p>
+          <p>默认账号：admin / 密码：123456</p>
           <p className="mt-1">首次登录后请修改密码</p>
         </div>
       </div>

@@ -22,23 +22,30 @@ export default function AdminLayout({
 
   const checkLoginStatus = async () => {
     try {
+      console.log('[Layout] 检查登录状态，当前路径:', pathname);
+
       const response = await fetch('/api/admin/login', {
         credentials: 'include',
       });
+
       const data = await response.json();
+      console.log('[Layout] 登录状态检查结果:', data);
 
       if (response.ok && data.success) {
+        console.log('[Layout] 用户已登录:', data.user);
         setIsLoggedIn(true);
         setCurrentUser(data.user);
       } else {
+        console.log('[Layout] 用户未登录');
         setIsLoggedIn(false);
         // 如果不是登录页面，跳转到登录页
         if (!pathname.includes('/login')) {
+          console.log('[Layout] 重定向到登录页');
           router.push('/admin/login');
         }
       }
     } catch (error) {
-      console.error('Check login status error:', error);
+      console.error('[Layout] Check login status error:', error);
       setIsLoggedIn(false);
     } finally {
       setLoading(false);

@@ -80,7 +80,7 @@ export async function adminLogin(
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // 开发环境设置为false
       sameSite: 'lax',
       maxAge: SESSION_MAX_AGE,
       path: '/',
