@@ -156,7 +156,7 @@ export default function AdminLayout({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <main className="p-6 pt-20 lg:pt-6">{children}</main>
+          <main className="p-6 pt-40 lg:pt-6">{children}</main>
         </div>
       </div>
 
