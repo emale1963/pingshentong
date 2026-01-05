@@ -52,6 +52,11 @@ export default function AdminLayout({
     }
   };
 
+  // 如果是登录页面，直接显示内容，不做认证检查
+  if (pathname.includes('/login')) {
+    return <>{children}</>;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -61,6 +66,8 @@ export default function AdminLayout({
   }
 
   if (!isLoggedIn) {
+    // 未登录时重定向到登录页
+    router.push('/admin/login');
     return null;
   }
 
