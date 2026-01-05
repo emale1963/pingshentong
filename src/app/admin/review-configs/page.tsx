@@ -27,7 +27,9 @@ export default function ReviewConfigsPage() {
   const fetchConfigs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/review-configs');
+      const response = await fetch('/api/admin/review-configs', {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -46,6 +48,7 @@ export default function ReviewConfigsPage() {
     try {
       const response = await fetch(`/api/admin/review-configs/${configId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {

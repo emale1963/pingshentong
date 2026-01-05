@@ -16,24 +16,32 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
+      console.log('[Login] Attempting login with username:', username);
+
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
+        credentials: 'include', // 确保包含cookies
       });
 
+      console.log('[Login] Response status:', response.status);
+
       const data = await response.json();
+      console.log('[Login] Response data:', data);
 
       if (response.ok && data.success) {
+        console.log('[Login] Login successful, redirecting to dashboard');
         // 登录成功，跳转到后台首页
         router.push('/admin/dashboard');
       } else {
+        console.log('[Login] Login failed:', data.error);
         setError(data.error || '登录失败，请检查用户名和密码');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('[Login] Network error:', error);
       setError('网络错误，请稍后重试');
     } finally {
       setLoading(false);

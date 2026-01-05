@@ -24,7 +24,9 @@ export default function ModelsPage() {
   const fetchModels = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/models');
+      const response = await fetch('/api/admin/models', {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -42,6 +44,7 @@ export default function ModelsPage() {
       setTesting(true);
       const response = await fetch('/api/admin/models', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

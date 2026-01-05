@@ -22,7 +22,9 @@ export default function AdminLayout({
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch('/api/admin/login');
+      const response = await fetch('/api/admin/login', {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -45,7 +47,10 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/admin/logout', { method: 'POST' });
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
       router.push('/admin/login');
     } catch (error) {
       console.error('Logout error:', error);

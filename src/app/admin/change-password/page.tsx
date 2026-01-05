@@ -52,6 +52,7 @@ export default function ChangePasswordPage() {
     try {
       const response = await fetch('/api/admin/change-password', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

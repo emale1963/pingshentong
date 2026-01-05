@@ -31,7 +31,9 @@ export default function UsersPage() {
       if (keyword) params.append('keyword', keyword);
       if (status) params.append('status', status);
 
-      const response = await fetch(`/api/admin/users?${params}`);
+      const response = await fetch(`/api/admin/users?${params}`, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (data.success) {

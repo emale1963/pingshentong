@@ -25,7 +25,9 @@ export default function SystemPage() {
   const fetchMetrics = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/system/performance?hours=1');
+      const response = await fetch('/api/admin/system/performance?hours=1', {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (data.success) {
