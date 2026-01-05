@@ -27,7 +27,7 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>('doubao-seed');
+  const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelHealth, setModelHealth] = useState<Record<string, ModelHealthInfo>>({});
   const [checkingHealth, setCheckingHealth] = useState(false);
@@ -233,48 +233,13 @@ export default function Home() {
                           value={model.id}
                           disabled={!isAvailable || isUnhealthy}
                         >
-                          {model.name}
+                          {isAvailable && !isUnhealthy ? '🟢' : '🔴'} {model.name}
                           {model.isDefault ? ' (默认)' : ''}
-                          {!isAvailable || isUnhealthy ? ' (不可用)' : ''}
                         </option>
                       );
                     })
                   )}
                 </select>
-
-                {/* 选中的模型信息 */}
-                {selectedModel && !modelsLoading && (
-                  <div className="mt-2 p-3 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                          {availableModels.find(m => m.id === selectedModel)?.name}
-                        </span>
-                        {availableModels.find(m => m.id === selectedModel)?.isDefault && (
-                          <span className="px-2 py-0.5 bg-[var(--color-brand-primary-light)] text-[var(--color-brand-primary)] text-xs rounded-[var(--radius-sm)]">
-                            默认
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {modelHealth[selectedModel]?.available !== false && (
-                          <span className="text-xs text-[var(--color-success)] flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]"></span>
-                            可用
-                          </span>
-                        )}
-                        {modelHealth[selectedModel]?.responseTime && (
-                          <span className="text-xs text-[var(--color-text-tertiary)]">
-                            {modelHealth[selectedModel]?.responseTime}ms
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                      {availableModels.find(m => m.id === selectedModel)?.description}
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* 上传进度 */}
