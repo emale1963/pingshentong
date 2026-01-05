@@ -95,41 +95,31 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-secondary)]">
-      {/* 顶部导航栏 */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)]/80 backdrop-blur-md border-b border-[var(--color-border-secondary)]">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-[var(--navbar-height)]">
-            <div className="flex items-center">
-              {/* 移动端菜单按钮 */}
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 border-r border-[var(--color-border-secondary)] flex items-center lg:hidden"
-                aria-label="Toggle menu"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-
-              {/* Logo */}
-              <div className="flex-shrink-0 flex items-center px-6">
-                <Logo size="md" showText={true} href="/admin/dashboard" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="flex pt-[var(--navbar-height)]">
+      <div className="flex">
         {/* 侧边栏 */}
         <div
           className={`
-            fixed inset-y-0 left-0 z-40 w-64 bg-[var(--color-bg-primary)] border-r border-[var(--color-border-secondary)] pt-[var(--navbar-height)]
+            fixed inset-y-0 left-0 z-50 w-64 bg-[var(--color-bg-primary)] border-r border-[var(--color-border-secondary)]
             transition-transform duration-300 ease-in-out
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             lg:translate-x-0
           `}
         >
+          {/* Logo和关闭按钮 */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--color-border-secondary)]">
+            <Logo size="md" showText={true} href="/admin/dashboard" />
+            {/* 移动端关闭按钮 */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1 lg:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+              aria-label="Close sidebar"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
           <div className="px-2 space-y-1 py-4">
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
@@ -156,7 +146,17 @@ export default function AdminLayout({
 
         {/* 主内容区 */}
         <div className="flex-1 lg:pl-64">
-          <main className="p-6">{children}</main>
+          {/* 移动端菜单按钮 */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-4 left-4 z-40 p-2 lg:hidden bg-[var(--color-bg-primary)] border border-[var(--color-border-secondary)] rounded-[var(--radius-base)] shadow-md"
+            aria-label="Open menu"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <main className="p-6 pt-16 lg:pt-6">{children}</main>
         </div>
       </div>
 
