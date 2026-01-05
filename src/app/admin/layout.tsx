@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function AdminLayout({
   children,
@@ -10,104 +10,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // 检查登录状态
-  const checkLoginStatus = async () => {
-    setLoading(true);
-    try {
-      console.log('[Layout] 检查登录状态，当前路径:', pathname);
-
-      // 尝试使用token认证
-      const token = localStorage.getItem('admin_session_token');
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['X-Session-Token'] = token;
-        console.log('[Layout] 使用token认证');
-      }
-
-      const response = await fetch('/api/admin/login', {
-        credentials: 'include',
-        headers,
-      });
-
-      const data = await response.json();
-      console.log('[Layout] 登录状态检查结果:', data);
-
-      if (response.ok && data.success) {
-        console.log('[Layout] 用户已登录:', data.user);
-        setIsLoggedIn(true);
-        setCurrentUser(data.user);
-      } else {
-        console.log('[Layout] 用户未登录');
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      console.error('[Layout] Check login status error:', error);
-      setIsLoggedIn(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 当路径变化时检查登录状态
-  useEffect(() => {
-    checkLoginStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
-
-  // 使用单独的effect处理重定向，避免在render中调用router.push
-  useEffect(() => {
-    if (!loading && !isLoggedIn && !pathname.includes('/login')) {
-      console.log('[Layout] Effect: 重定向到登录页');
-      router.push('/admin/login');
-    }
-  }, [loading, isLoggedIn, pathname, router]);
-
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem('admin_session_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['X-Session-Token'] = token;
-      }
-
-      await fetch('/api/admin/logout', {
-        method: 'POST',
-        credentials: 'include',
-        headers,
-      });
-      
-      // 清除localStorage中的token
-      localStorage.removeItem('admin_session_token');
-      router.push('/admin/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  // 如果是登录页面，直接显示内容，不做认证检查
+  // 如果是登录页面，直接显示内容
   if (pathname.includes('/login')) {
     return <>{children}</>;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!isLoggedIn) {
-    // 未登录时不渲染内容，重定向由useEffect处理
-    return null;
   }
 
   const navItems = [
@@ -188,19 +95,6 @@ export default function AdminLayout({
               <div className="flex-shrink-0 flex items-center px-6">
                 <h1 className="text-xl font-bold text-gray-900">后台管理系统</h1>
               </div>
-            </div>
-
-            {/* 用户信息 */}
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                欢迎，{currentUser?.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                退出登录
-              </button>
             </div>
           </div>
         </div>

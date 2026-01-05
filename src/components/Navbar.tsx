@@ -34,7 +34,7 @@ export default function Navbar() {
               我的报告
             </Link>
             <Link
-              href="/admin/login"
+              href="/admin/dashboard"
               className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition"
             >
               后台管理
