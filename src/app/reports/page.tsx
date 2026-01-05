@@ -113,12 +113,12 @@ export default function MyReports() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">主人，没查到您的评审记录</h3>
-              <div className="mt-6">
+              <div className="mt-6 relative z-50">
                 <Link
                   href="/"
-                  className="inline-flex items-center px-6 py-2.5 border border-transparent rounded-[var(--radius-base)] text-sm font-medium text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] transition-all duration-[var(--transition-fast)]"
+                  className="inline-flex items-center px-6 py-2.5 border border-transparent rounded-[var(--radius-base)] text-sm font-medium text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] transition-all duration-[var(--transition-fast)] relative z-50"
                 >
-                  提交新报告
+                  请上传文件
                 </Link>
               </div>
             </div>
