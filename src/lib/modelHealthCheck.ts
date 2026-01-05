@@ -12,6 +12,8 @@ export interface ModelHealthStatus {
   available: boolean;
   lastChecked: string;
   error?: string;
+  errorCode?: string; // 错误代码
+  errorDetails?: string; // 详细错误信息
   responseTime?: number; // 响应时间（毫秒）
 }
 
@@ -78,9 +80,62 @@ async function checkModelHealth(modelId: AIModelType): Promise<ModelHealthStatus
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    let errorMessage = '未知错误';
+    let errorCode = 'UNKNOWN_ERROR';
+    let errorDetails = '';
 
-    console.error(`[Model Health Check] ${modelId} is unavailable:`, errorMessage);
+    // 分类错误类型
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack || '';
+
+      // 资源点不足
+      if (errorMessage.includes('资源点不足') || errorMessage.includes('付费版套餐')) {
+        errorCode = 'INSUFFICIENT_QUOTA';
+        errorMessage = 'AI服务资源点不足，请升级服务套餐';
+      }
+      // 网络相关错误
+      else if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('ENOTFOUND')) {
+        errorCode = 'NETWORK_ERROR';
+        errorMessage = '网络连接失败，请检查网络设置';
+      }
+      // 超时错误
+      else if (errorMessage.includes('timeout') || errorMessage.includes('超时')) {
+        errorCode = 'TIMEOUT_ERROR';
+        errorMessage = '模型响应超时';
+      }
+      // API认证错误
+      else if (errorMessage.includes('401') || errorMessage.includes('403') || errorMessage.includes('认证失败')) {
+        errorCode = 'AUTH_ERROR';
+        errorMessage = 'API认证失败，请检查配置';
+      }
+      // 模型不存在
+      else if (errorMessage.includes('404') || errorMessage.includes('模型不存在')) {
+        errorCode = 'MODEL_NOT_FOUND';
+        errorMessage = '模型不存在或未配置';
+      }
+      // 服务端错误
+      else if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503')) {
+        errorCode = 'SERVER_ERROR';
+        errorMessage = 'AI服务暂时不可用，请稍后重试';
+      }
+      // 速率限制
+      else if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+        errorCode = 'RATE_LIMIT';
+        errorMessage = '请求过于频繁，请稍后重试';
+      }
+      // 配置错误
+      else if (errorMessage.includes('config') || errorMessage.includes('配置')) {
+        errorCode = 'CONFIG_ERROR';
+        errorMessage = 'AI服务配置错误';
+      }
+    }
+
+    console.error(`[Model Health Check] ${modelId} is unavailable:`, {
+      errorCode,
+      errorMessage,
+      details: errorDetails || String(error),
+    });
 
     return {
       modelId,
@@ -88,6 +143,8 @@ async function checkModelHealth(modelId: AIModelType): Promise<ModelHealthStatus
       available: false,
       lastChecked: now,
       error: errorMessage,
+      errorCode,
+      errorDetails: errorDetails || String(error),
       responseTime,
     };
   }

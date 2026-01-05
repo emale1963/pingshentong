@@ -13,6 +13,7 @@ export interface AIModel {
 
 /**
  * 可用的 AI 模型列表
+ * 根据集成服务提供的模型ID配置
  */
 export const AI_MODELS: Record<AIModelType, AIModel> = {
   'doubao-seed': {
@@ -26,14 +27,14 @@ export const AI_MODELS: Record<AIModelType, AIModel> = {
     id: 'kimi-k2',
     name: 'Kimi K2',
     description: '月之暗面开发的长上下文大语言模型，适合复杂任务和长文档分析',
-    modelId: 'kimi-k2-251230',
+    modelId: 'kimi-k2-250905',
     provider: '月之暗面',
   },
   'deepseek-r1': {
     id: 'deepseek-r1',
     name: 'DeepSeek R1',
     description: '深度求索开发的推理强化模型，适合复杂逻辑推理和专业分析',
-    modelId: 'deepseek-r1-0118',
+    modelId: 'deepseek-r1-250528',
     provider: '深度求索',
   },
 } as const;
@@ -46,9 +47,9 @@ export function getAIModel(modelId: string): AIModel | undefined {
 }
 
 /**
- * 默认使用的模型
+ * 默认使用的模型 - 优先使用豆包Seed(已确认可用)
  */
-export const DEFAULT_MODEL: AIModelType = 'kimi-k2';
+export const DEFAULT_MODEL: AIModelType = 'doubao-seed';
 
 /**
  * 所有的工程专业类型
