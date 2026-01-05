@@ -44,14 +44,12 @@ export default function Navbar() {
               >
                 我的报告
               </Link>
-              <button
-                onClick={handleAdminLogin}
-                className={`px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition ${
-                  isAdmin ? 'bg-blue-800' : ''
-                }`}
+              <Link
+                href="/admin/login"
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition"
               >
                 后台管理
-              </button>
+              </Link>
             </div>
           </div>
         </div>
