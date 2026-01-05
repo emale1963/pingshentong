@@ -34,11 +34,9 @@ export default function ProfessionSelector({
     const isSelected = selectedProfessions.includes(professionId);
 
     if (isSelected) {
-      // 取消选择
       const newSelection = selectedProfessions.filter((id) => id !== professionId);
       onChange(newSelection);
     } else {
-      // 添加选择
       const newSelection = [...selectedProfessions, professionId];
       onChange(newSelection);
     }
@@ -47,7 +45,7 @@ export default function ProfessionSelector({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-3">
+        <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
           {label}
         </label>
       )}
@@ -63,10 +61,10 @@ export default function ProfessionSelector({
               onClick={() => handleToggle(profession.id)}
               disabled={disabled}
               className={`
-                relative flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all duration-200
+                relative flex flex-col items-center justify-center p-4 rounded-[var(--radius-md)] border-2 transition-all duration-[var(--transition-fast)]
                 ${isSelected
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+                  ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary-light)] text-[var(--color-brand-primary)]'
+                  : 'border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-primary)] hover:bg-[var(--color-bg-hover)]'
                 }
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
@@ -76,7 +74,7 @@ export default function ProfessionSelector({
 
               {isSelected && (
                 <div className="absolute top-2 right-2">
-                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 text-[var(--color-brand-primary)]" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -92,9 +90,9 @@ export default function ProfessionSelector({
 
       {/* 已选择提示 */}
       {selectedProfessions.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <span className="font-medium">已选择 {selectedProfessions.length} 个专业：</span>
+        <div className="mt-4 p-3 bg-[var(--color-brand-primary-light)] border border-[var(--color-brand-primary)] rounded-[var(--radius-md)]">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            <span className="font-medium text-[var(--color-brand-primary)]">已选择 {selectedProfessions.length} 个专业：</span>
             {selectedProfessions.map(id => PROFESSIONS.find(p => p.id === id)?.name).join('、')}
           </p>
         </div>

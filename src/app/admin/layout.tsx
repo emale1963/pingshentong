@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from '@/components/Logo';
 
 export default function AdminLayout({
   children,
@@ -75,16 +76,17 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[var(--color-bg-secondary)]">
       {/* 顶部导航栏 */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)]/80 backdrop-blur-md border-b border-[var(--color-border-secondary)]">
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
+          <div className="flex justify-between h-[var(--navbar-height)]">
+            <div className="flex items-center">
               {/* 移动端菜单按钮 */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="px-4 border-r border-gray-200 flex items-center lg:hidden"
+                className="p-2 border-r border-[var(--color-border-secondary)] flex items-center lg:hidden"
+                aria-label="Toggle menu"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -93,21 +95,24 @@ export default function AdminLayout({
 
               {/* Logo */}
               <div className="flex-shrink-0 flex items-center px-6">
-                <h1 className="text-xl font-bold text-gray-900">后台管理系统</h1>
+                <Logo size="md" showText={true} href="/admin/dashboard" />
               </div>
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="flex">
+      <div className="flex pt-[var(--navbar-height)]">
         {/* 侧边栏 */}
         <div
-          className={`fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 pt-16 transition-transform duration-300 ease-in-out ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0`}
+          className={`
+            fixed inset-y-0 left-0 z-40 w-64 bg-[var(--color-bg-primary)] border-r border-[var(--color-border-secondary)] pt-[var(--navbar-height)]
+            transition-transform duration-300 ease-in-out
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:translate-x-0
+          `}
         >
-          <div className="px-2 space-y-1">
+          <div className="px-2 space-y-1 py-4">
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
@@ -116,15 +121,15 @@ export default function AdminLayout({
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                    flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                    flex items-center px-4 py-3 text-sm font-medium rounded-[var(--radius-base)] transition-colors
                     ${isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-[var(--color-brand-primary-light)] text-[var(--color-brand-primary)]'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
                     }
                   `}
                 >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.name}
+                  <span className="mr-3 flex-shrink-0">{item.icon}</span>
+                  <span className="truncate">{item.name}</span>
                 </Link>
               );
             })}
@@ -140,7 +145,7 @@ export default function AdminLayout({
       {/* 移动端遮罩 */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
