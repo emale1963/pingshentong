@@ -61,7 +61,7 @@ export default function ProfessionSelector({
               onClick={() => handleToggle(profession.id)}
               disabled={disabled}
               className={`
-                relative flex flex-col items-center justify-center p-4 rounded-[var(--radius-md)] border-2 transition-all duration-[var(--transition-fast)]
+                relative flex flex-col items-center justify-center p-3 rounded-[var(--radius-md)] border-2 transition-all duration-[var(--transition-fast)]
                 ${isSelected
                   ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary-light)] text-[var(--color-brand-primary)]'
                   : 'border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-primary)] hover:bg-[var(--color-bg-hover)]'
@@ -69,8 +69,8 @@ export default function ProfessionSelector({
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
-              <span className="text-2xl mb-2">{profession.icon}</span>
-              <span className="text-sm font-medium">{profession.name}</span>
+              <span className="text-xl mb-1">{profession.icon}</span>
+              <span className="text-xs font-medium">{profession.name}</span>
 
               {isSelected && (
                 <div className="absolute top-2 right-2">

@@ -174,13 +174,6 @@ export default function Home() {
       {/* 主内容区 */}
       <div className="pt-[var(--navbar-height)]">
         <div className="max-w-[var(--max-width-content)] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* 页面标题 */}
-          <div className="text-center mb-6 fade-in">
-            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
-              请上传评审文件
-            </h1>
-          </div>
-
           {/* 主卡片 */}
           <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
             <div className="card">
