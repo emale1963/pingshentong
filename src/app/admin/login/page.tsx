@@ -9,10 +9,12 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
 
   // 页面加载时清除错误
   useEffect(() => {
     setError('');
+    setDebugInfo('');
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,14 +41,25 @@ export default function AdminLogin() {
 
       const data = await response.json();
       console.log('[Login] 响应数据:', data);
+      console.log('[Login] response.ok:', response.ok, 'data.success:', data.success);
+      
+      // 在页面上显示调试信息
+      setDebugInfo(JSON.stringify({
+        status: response.status,
+        ok: response.ok,
+        data: data,
+      }, null, 2));
 
       if (response.ok && data.success) {
         console.log('[Login] 登录成功，准备跳转');
-        // 等待一小段时间确保cookie被设置
-        await new Promise(resolve => setTimeout(resolve, 200));
+        console.log('[Login] Response headers:', response.headers);
+        // 等待更长时间确保cookie被设置
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('[Login] 开始跳转到dashboard');
         router.push('/admin/dashboard');
       } else {
         console.log('[Login] 登录失败:', data.error);
+        console.log('[Login] response.ok:', response.ok, 'data:', data);
         setError(data.error || '登录失败，请检查用户名和密码');
       }
     } catch (error) {
@@ -99,6 +112,13 @@ export default function AdminLogin() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
+            </div>
+          )}
+
+          {debugInfo && (
+            <div className="bg-gray-100 border border-gray-300 text-gray-800 px-4 py-3 rounded-lg text-xs font-mono overflow-auto max-h-40">
+              <div className="font-bold mb-2">调试信息:</div>
+              <pre>{debugInfo}</pre>
             </div>
           )}
 

@@ -78,13 +78,20 @@ export async function adminLogin(
 
     // 设置Cookie
     const cookieStore = await cookies();
+    
+    console.log('[Auth] Setting cookie:', {
+      name: SESSION_COOKIE_NAME,
+    });
+    
     cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
       httpOnly: true,
-      secure: false, // 开发环境设置为false
+      secure: false, // 开发环境必须设置为false
       sameSite: 'lax',
       maxAge: SESSION_MAX_AGE,
       path: '/',
     });
+
+    console.log('[Auth] Cookie set successfully');
 
     return {
       success: true,
@@ -135,7 +142,10 @@ export async function getCurrentAdmin(): Promise<AdminUser | null> {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get(SESSION_COOKIE_NAME);
 
+    console.log('[Auth] Getting current admin, sessionToken:', sessionToken ? 'found' : 'not found');
+
     if (!sessionToken) {
+      console.log('[Auth] No session token found');
       return null;
     }
 
