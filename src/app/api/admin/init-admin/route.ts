@@ -10,6 +10,10 @@ export async function POST() {
   try {
     const admin = await userManager.initDefaultAdmin();
 
+    if (!admin) {
+      throw new Error('Failed to initialize admin');
+    }
+
     return NextResponse.json({
       success: true,
       message: '管理员账号初始化成功',

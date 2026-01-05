@@ -7,17 +7,13 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get(SESSION_COOKIE_NAME);
-    
+
     const response = NextResponse.json({
       hasCookie: !!sessionToken,
       cookieValue: sessionToken ? sessionToken.value : null,
       allCookies: cookieStore.getAll().map(c => ({
         name: c.name,
         value: c.value.substring(0, 50) + '...',
-        httpOnly: c.httpOnly,
-        secure: c.secure,
-        sameSite: c.sameSite,
-        path: c.path,
       })),
     });
 

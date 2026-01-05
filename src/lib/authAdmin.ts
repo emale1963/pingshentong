@@ -115,10 +115,10 @@ export async function adminLogin(
       user: {
         id: user.userId,
         username: user.username,
-        email: user.email,
-        full_name: user.fullName,
-        role: user.role,
-        status: user.status,
+        email: user.email || '',
+        full_name: user.fullName || '',
+        role: user.role || '',
+        status: user.status || '',
         is_admin: user.isAdmin,
       },
     };
@@ -199,10 +199,10 @@ export async function getCurrentAdmin(): Promise<AdminUser | null> {
     return {
       id: user.userId,
       username: user.username,
-      email: user.email,
-      full_name: user.fullName,
-      role: user.role,
-      status: user.status,
+      email: user.email || '',
+      full_name: user.fullName || '',
+      role: user.role || '',
+      status: user.status || '',
       is_admin: user.isAdmin,
     };
   } catch (error) {
