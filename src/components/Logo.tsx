@@ -24,45 +24,77 @@ export default function Logo({
 
   return (
     <Link href={href} className={`flex items-center gap-3 group ${className}`}>
-      {/* Logo 图标 - 初始黑白，悬停变彩色 */}
+      {/* Logo 图标 - 现代简洁设计 */}
       <svg
-        className="logo-icon transition-all duration-300"
+        className="transition-all duration-300"
         width={icon}
         height={icon}
         viewBox="0 0 48 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* 简洁的文档图标 */}
+        <defs>
+          {/* 渐变色定义 */}
+          <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#10A37F', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#0D8F6F', stopOpacity: 1 }} />
+          </linearGradient>
+        </defs>
+
+        {/* 外圆 - 保护和包容 */}
+        <circle
+          cx="24"
+          cy="24"
+          r="22"
+          fill="url(#logoGradient)"
+          opacity="0.1"
+          className="group-hover:opacity-0.15 transition-opacity duration-300"
+        />
+
+        {/* 简化的文档图标 */}
+        <rect
+          x="14"
+          y="8"
+          width="20"
+          height="32"
+          rx="2"
+          stroke="url(#logoGradient)"
+          strokeWidth="2"
+          fill="none"
+          className="group-hover:stroke-[#10A37F] transition-colors duration-300"
+        />
+
+        {/* 对勾 - 评审通过，简洁有力 */}
         <path
-          d="M14 8C14 6.89543 14.8954 6 16 6H32C33.1046 6 34 6.89543 34 8V40C34 41.1046 33.1046 42 32 42H16C14.8954 42 14 41.1046 14 40V8Z"
-          className="stroke-current"
+          d="M20 24L23 27L30 18"
+          stroke="url(#logoGradient)"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
+          fill="none"
+          className="group-hover:stroke-[#10A37F] transition-colors duration-300"
         />
-        {/* 对勾图标 - 表示审核通过 */}
-        <path
-          d="M22 26L27 31L36 20"
-          className="stroke-current"
-          strokeWidth="2.5"
+
+        {/* 简化的装饰线 - 表示文档内容 */}
+        <line
+          x1="18"
+          y1="15"
+          x2="30"
+          y2="15"
+          stroke="url(#logoGradient)"
+          strokeWidth="1.5"
           strokeLinecap="round"
-          strokeLinejoin="round"
+          className="group-hover:stroke-[#10A37F] transition-colors duration-300"
         />
-        {/* 装饰性线条 - 表示评审过程 */}
-        <path
-          d="M19 16H29"
-          className="stroke-current"
-          strokeWidth="2"
+        <line
+          x1="18"
+          y1="19"
+          x2="26"
+          y2="19"
+          stroke="url(#logoGradient)"
+          strokeWidth="1.5"
           strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M19 21H25"
-          className="stroke-current"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          className="group-hover:stroke-[#10A37F] transition-colors duration-300"
         />
       </svg>
 
