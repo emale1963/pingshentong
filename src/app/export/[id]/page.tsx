@@ -193,16 +193,8 @@ export default function ExportPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
-      {/* 返回按钮和报告信息合并 */}
+      {/* 报告信息 */}
       <div className="mb-4">
-        <Button
-          variant="secondary"
-          onClick={() => router.back()}
-          className="mb-3"
-        >
-          ← 返回
-        </Button>
-
         <div className="bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-start justify-between flex-wrap gap-2">
             <div className="flex-1 min-w-0">
@@ -347,52 +339,6 @@ export default function ExportPage() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* 导出历史 - 紧凑布局 */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <h2 className="text-base font-semibold text-gray-900 mb-3">导出历史</h2>
-
-        {exports.length === 0 ? (
-          <div className="text-center py-4 text-gray-500 text-sm">
-            暂无导出记录
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {exports.map((exportItem) => {
-              const typeInfo = getExportTypeBadge(exportItem.export_type);
-              const statusInfo = getExportStatusBadge(exportItem.status);
-              return (
-                <div key={exportItem.id} className="flex items-center justify-between border border-gray-200 rounded p-3">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xl">{typeInfo.icon}</span>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm">{exportItem.file_name}</p>
-                      <div className="flex items-center space-x-1 text-xs text-gray-500">
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${typeInfo.color}`}>
-                          {typeInfo.label}
-                        </span>
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${statusInfo.color}`}>
-                          {statusInfo.label}
-                        </span>
-                        <span>{new Date(exportItem.created_at).toLocaleString('zh-CN')}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={exportItem.status !== 'completed'}
-                    onClick={() => handleDownload(exportItem.id)}
-                  >
-                    {exportItem.status === 'completed' ? '下载' : '生成中...'}
-                  </Button>
-                </div>
-              );
-            })}
           </div>
         )}
       </div>
