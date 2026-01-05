@@ -173,20 +173,20 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--color-bg-secondary)]">
       {/* 主内容区 */}
       <div className="pt-[var(--navbar-height)]">
-        <div className="max-w-[var(--max-width-content)] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-[var(--max-width-content)] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 页面标题 */}
-          <div className="text-center mb-12 fade-in">
-            <h1 className="text-4xl font-bold text-[var(--color-text-primary)]">
+          <div className="text-center mb-6 fade-in">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
               请上传评审文件
             </h1>
           </div>
 
           {/* 主卡片 */}
-          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
             <div className="card">
               {/* 文件上传区域 */}
-              <div className="mb-8">
-                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   上传文件
                 </label>
 
@@ -199,8 +199,8 @@ export default function Home() {
               </div>
 
               {/* 专业选择 */}
-              <div className="mb-8">
-                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   选择评审专业
                 </label>
                 <ProfessionSelector
@@ -212,55 +212,22 @@ export default function Home() {
               </div>
 
               {/* AI模型选择 */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-[var(--color-text-primary)]">
-                    选择 AI 模型
-                  </label>
-                  <button
-                    type="button"
-                    onClick={checkModelsHealth}
-                    disabled={checkingHealth}
-                    className="text-sm text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] disabled:opacity-50 flex items-center gap-2 transition-colors"
-                  >
-                    {checkingHealth ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-[var(--color-brand-primary)] border-t-transparent rounded-full spinner"></div>
-                        检测中...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        检测模型状态
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* 模型健康状态摘要 */}
-                {Object.keys(modelHealth).length > 0 && (
-                  <div className="mb-4 p-4 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]">
-                    <div className="text-sm text-[var(--color-text-secondary)]">
-                      <span className="font-medium">模型状态:</span>{' '}
-                      <span className="text-[var(--color-success)]">
-                        {Object.values(modelHealth).filter(h => h.available).length} 个可用
-                      </span>
-                      {' '}/{' '}
-                      <span className="text-[var(--color-text-tertiary)]">{Object.keys(modelHealth).length} 个模型</span>
-                    </div>
-                  </div>
-                )}
-
-                {modelsLoading ? (
-                  <div className="text-center py-8 text-[var(--color-text-tertiary)]">
-                    <div className="w-8 h-8 border-2 border-[var(--color-border-primary)] border-t-[var(--color-brand-primary)] rounded-full spinner mx-auto"></div>
-                    <p className="mt-2">加载模型列表中...</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {availableModels.map((model) => {
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                  选择 AI 模型
+                </label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  disabled={isSubmitting || modelsLoading}
+                  className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border-secondary)] rounded-[var(--radius-base)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {modelsLoading ? (
+                    <option>加载中...</option>
+                  ) : availableModels.length === 0 ? (
+                    <option>暂无可用模型</option>
+                  ) : (
+                    availableModels.map((model) => {
                       const healthInfo = modelHealth[model.id];
                       const isAvailable = healthInfo?.available !== undefined
                         ? healthInfo.available
@@ -268,86 +235,58 @@ export default function Home() {
                       const isUnhealthy = healthInfo?.available === false;
 
                       return (
-                        <div
+                        <option
                           key={model.id}
-                          onClick={() => !isSubmitting && isAvailable && setSelectedModel(model.id)}
-                          className={`
-                            p-5 border-2 rounded-[var(--radius-lg)] transition-all cursor-pointer relative
-                            ${selectedModel === model.id
-                              ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary-light)]'
-                              : isUnhealthy
-                              ? 'border-[var(--color-error)] bg-[rgba(239,68,68,0.05)] opacity-60 cursor-not-allowed'
-                              : 'border-[var(--color-border-secondary)] hover:border-[var(--color-border-primary)]'
-                            }
-                            ${isSubmitting ? 'opacity-50' : ''}
-                          `}
+                          value={model.id}
+                          disabled={!isAvailable || isUnhealthy}
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-semibold text-[var(--color-text-primary)] text-sm flex items-center">
-                              {model.name}
-                              <span className={`ml-2 w-2 h-2 rounded-full ${
-                                isAvailable ? 'bg-[var(--color-success)]' : 'bg-[var(--color-error)]'
-                              }`} />
-                            </h4>
-                            {selectedModel === model.id && (
-                              <span className="text-[var(--color-brand-primary)] text-lg">✓</span>
-                            )}
-                          </div>
-                          <p className="text-sm text-[var(--color-text-secondary)] mb-2">{model.description}</p>
-                          <p className="text-xs text-[var(--color-text-tertiary)] mb-2">提供商: {model.provider}</p>
-                          {model.isDefault && (
-                            <span className="inline-block mt-2 px-2 py-1 bg-[var(--color-brand-primary-light)] text-[var(--color-brand-primary)] text-xs rounded-[var(--radius-sm)]">
-                              默认推荐
-                            </span>
-                          )}
-                          {healthInfo?.responseTime && isAvailable && (
-                            <div className="mt-2 text-xs text-[var(--color-text-tertiary)]">
-                              响应时间: {healthInfo.responseTime}ms
-                            </div>
-                          )}
-                          {isUnhealthy && healthInfo?.error && (
-                            <div className="mt-2 p-2 bg-[rgba(239,68,68,0.1)] border border-[var(--color-error)] rounded-[var(--radius-sm)]">
-                              <div className="flex items-start gap-2">
-                                {healthInfo.errorCode === 'INSUFFICIENT_QUOTA' && (
-                                  <svg className="h-4 w-4 text-[var(--color-error)] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                  </svg>
-                                )}
-                                <div className="flex-1">
-                                  <div className="text-xs font-medium text-[var(--color-error)] mb-1">
-                                    {healthInfo.errorCode ? `[${healthInfo.errorCode}] ` : ''}
-                                    {healthInfo.error}
-                                  </div>
-                                  {healthInfo.responseTime && (
-                                    <div className="text-xs text-[var(--color-text-tertiary)] mt-1">
-                                      响应时间: {healthInfo.responseTime}ms
-                                    </div>
-                                  )}
-                                  {healthInfo.errorDetails && (
-                                    <details className="mt-1">
-                                      <summary className="text-xs text-[var(--color-error)] cursor-pointer hover:text-[var(--color-error)]">
-                                        查看详情
-                                      </summary>
-                                      <div className="mt-1 text-xs text-[var(--color-error)] break-words">
-                                        {healthInfo.errorDetails.slice(0, 200)}
-                                        {healthInfo.errorDetails.length > 200 && '...'}
-                                      </div>
-                                    </details>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                          {model.name}
+                          {model.isDefault ? ' (默认)' : ''}
+                          {!isAvailable || isUnhealthy ? ' (不可用)' : ''}
+                        </option>
                       );
-                    })}
+                    })
+                  )}
+                </select>
+
+                {/* 选中的模型信息 */}
+                {selectedModel && !modelsLoading && (
+                  <div className="mt-2 p-3 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                          {availableModels.find(m => m.id === selectedModel)?.name}
+                        </span>
+                        {availableModels.find(m => m.id === selectedModel)?.isDefault && (
+                          <span className="px-2 py-0.5 bg-[var(--color-brand-primary-light)] text-[var(--color-brand-primary)] text-xs rounded-[var(--radius-sm)]">
+                            默认
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {modelHealth[selectedModel]?.available !== false && (
+                          <span className="text-xs text-[var(--color-success)] flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]"></span>
+                            可用
+                          </span>
+                        )}
+                        {modelHealth[selectedModel]?.responseTime && (
+                          <span className="text-xs text-[var(--color-text-tertiary)]">
+                            {modelHealth[selectedModel]?.responseTime}ms
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                      {availableModels.find(m => m.id === selectedModel)?.description}
+                    </p>
                   </div>
                 )}
               </div>
 
               {/* 上传进度 */}
               {isSubmitting && uploadProgress > 0 && (
-                <div className="mb-8">
+                <div className="mb-6">
                   <div className="bg-[var(--color-border-secondary)] rounded-full h-2 overflow-hidden">
                     <div
                       className="bg-[var(--color-brand-primary)] h-2 rounded-full transition-all duration-300 ease-out"
