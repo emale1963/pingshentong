@@ -110,7 +110,6 @@ async function performAIReview(reportId: number, reportData: any, modelType: str
       profession: result.profession,
       ai_analysis: result.ai_analysis,
       manual_review: '',
-      overall_score: result.overall_score,
       review_items: result.review_items.map((item: any) => ({
         ...item,
         confirmed: false,

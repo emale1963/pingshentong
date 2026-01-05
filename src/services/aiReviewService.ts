@@ -6,14 +6,13 @@ interface ReviewItem {
   id: string;
   description: string;
   standard: string;
-  severity: 'high' | 'medium' | 'low';
   suggestion: string;
+  display_order?: number;
 }
 
 interface ReviewResult {
   profession: string;
   ai_analysis: string;
-  overall_score: number;
   review_items: ReviewItem[];
 }
 
@@ -46,21 +45,26 @@ export class AIReviewService {
     const professionName = PROFESSION_NAMES[profession] || profession;
     const model = AI_MODELS[modelType] || AI_MODELS[DEFAULT_MODEL];
 
-    const userPrompt = `请对以下建筑可研报告的${professionName}专业进行评审：
+    const userPrompt = `请对以下报告的${professionName}专业进行评审：
 
 报告概述：
 ${reportSummary}
 
 请严格按照JSON格式返回评审结果，包含：
-- ai_analysis: ${professionName}专业的整体评价和分析（详细说明该专业的优缺点）
-- overall_score: 75-95之间的综合评分（根据整体质量给出合理评分）
-- review_items: 评审意见数组，每条意见包含id、description、standard、severity、suggestion
+- ai_analysis: ${professionName}专业的整体评价和分析
+- review_items: 评审意见数组（5-10条），每条意见包含id、description、standard、suggestion
+
+评审意见格式要求：
+每条意见必须包含三部分内容：
+1. description: 问题描述（具体发现的问题）
+2. standard: 规范依据（相关规范名称、编号及具体条款）
+3. suggestion: 修改建议（具体可行的修改建议）
 
 注意：
-1. severity必须为"high"、"medium"或"low"之一
-2. standard应引用相关的国家规范或标准（如GB 50016-2014）
-3. id使用格式：${profession.substring(0, 4)}_序号（如arch_1、stru_1）
-4. review_items至少包含1-3条意见，根据实际情况调整`;
+1. id使用格式：${profession.substring(0, 4)}_序号（如arch_1、stru_1）
+2. 请提供5-10条评审意见
+3. 确保每条意见都有问题描述、规范依据和修改建议三部分
+4. 标准应引用相关的国家规范或标准（如GB 50016-2014第X.X.X条）`;
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
@@ -97,41 +101,41 @@ ${reportSummary}
       const result = JSON.parse(jsonMatch[0]);
 
       // 验证数据结构
-      if (!result.ai_analysis || typeof result.overall_score !== 'number' || !Array.isArray(result.review_items)) {
+      if (!result.ai_analysis || !Array.isArray(result.review_items)) {
         throw new Error('评审结果数据结构不完整');
       }
 
-      // 生成唯一的ID
+      // 生成唯一的ID并添加display_order
       result.review_items = result.review_items.map((item: any, index: number) => ({
-        ...item,
         id: item.id || `${profession.substring(0, 4)}_${index + 1}`,
-        confirmed: false,
+        description: item.description,
+        standard: item.standard,
+        suggestion: item.suggestion,
+        display_order: index + 1,
       }));
 
-      console.log(`[AI Review] ${profession} review generated: ${result.review_items.length} items, score: ${result.overall_score}`);
+      console.log(`[AI Review] ${profession} review generated: ${result.review_items.length} items`);
 
       return {
         profession,
         ai_analysis: result.ai_analysis,
-        overall_score: result.overall_score,
         review_items: result.review_items,
       } as ReviewResult;
     } catch (error) {
       console.error(`[AI Review] Error analyzing ${profession}:`, error);
-      
+
       // 如果AI失败，返回默认的评审结果
       console.log(`[AI Review] ${profession}: Using fallback review`);
       return {
         profession,
         ai_analysis: `${PROFESSION_NAMES[profession] || profession}专业评审：由于AI分析服务暂时不可用，无法提供详细分析。建议人工审查该专业的设计内容，确保符合相关国家规范和标准。`,
-        overall_score: 75,
         review_items: [
           {
             id: `${profession.substring(0, 4)}_1`,
             description: 'AI评审服务暂时不可用，建议人工审查',
             standard: '建议参考相关国家规范',
-            severity: 'medium',
             suggestion: '请联系管理员检查AI服务状态，或进行人工评审',
+            display_order: 1,
           },
         ],
       } as ReviewResult;

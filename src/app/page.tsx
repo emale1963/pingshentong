@@ -134,20 +134,27 @@ export default function Home() {
       <div className="bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            提交可研报告
+            提交报告
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            上传建筑可研报告，选择评审专业，系统将使用AI进行智能评审分析
+            上传报告，选择评审专业，系统将使用AI进行智能评审分析
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* 文件上传 */}
           <div>
+            <div className="mb-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">支持文件格式：</span>PDF、DOC、DOCX
+                <span className="mx-2">|</span>
+                <span className="font-medium">最大文件大小：</span>100MB
+              </p>
+            </div>
             <FileUpload
               onFileSelect={handleFileSelect}
               accept=".pdf,.doc,.docx"
-              maxSize={50}
+              maxSize={100}
               disabled={isSubmitting}
             />
           </div>

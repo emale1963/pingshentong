@@ -20,14 +20,12 @@ interface ReviewItem {
   id: string;
   description: string;
   standard: string;
-  severity: 'high' | 'medium' | 'low';
   suggestion: string;
   confirmed: boolean;
 }
 
 interface Review {
   profession: string;
-  overall_score: number;
   review_items: ReviewItem[];
   confirmed_items: string[];
 }
@@ -81,7 +79,7 @@ export default function ExportPage() {
     }
   };
 
-  const handleExport = async (type: 'word' | 'pdf' | 'excel') => {
+  const handleExport = async (type: 'word') => {
     setGenerating(true);
 
     try {
@@ -182,7 +180,6 @@ export default function ExportPage() {
       profession: review.profession,
       professionName: getProfessionName(review.profession),
       confirmed: review.confirmed_items.includes(item.id) || item.confirmed,
-      score: review.overall_score,
     }))
   );
 
@@ -221,31 +218,26 @@ export default function ExportPage() {
 
       {/* 导出选项 */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">选择导出格式</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">导出评审报告</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {[
-            { type: 'word' as const, title: 'Word 文档', desc: '.docx 格式，方便编辑', icon: '📄' },
-            { type: 'pdf' as const, title: 'PDF 文档', desc: '.pdf 格式，适合打印', icon: '📕' },
-            { type: 'excel' as const, title: 'Excel 表格', desc: '.xlsx 格式，数据分析', icon: '📊' },
-          ].map((format) => (
-            <button
-              key={format.type}
-              onClick={() => handleExport(format.type)}
-              disabled={generating}
-              className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="text-4xl mb-3">{format.icon}</span>
-              <h3 className="font-semibold text-gray-900 mb-1">{format.title}</h3>
-              <p className="text-sm text-gray-500">{format.desc}</p>
-            </button>
-          ))}
+        <div className="grid grid-cols-1 gap-4 mb-6">
+          <button
+            onClick={() => handleExport('word')}
+            disabled={generating}
+            className="flex items-center justify-center p-8 border-2 border-blue-500 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="text-5xl mr-4">📄</span>
+            <div className="text-left">
+              <h3 className="text-xl font-semibold text-gray-900 mb-1">下载Word报告</h3>
+              <p className="text-sm text-gray-600">.docx 格式，包含完整的评审意见和AI分析</p>
+            </div>
+          </button>
         </div>
 
         {generating && (
-          <div className="flex items-center justify-center text-blue-600">
+          <div className="flex items-center justify-center text-blue-600 py-4">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-            <span>正在生成文档，请稍候...</span>
+            <span>正在生成Word文档，请稍候...</span>
           </div>
         )}
       </div>
@@ -263,7 +255,7 @@ export default function ExportPage() {
             {/* 报告汇总 */}
             <div className="border-b border-gray-200 pb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">报告汇总</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <p className="text-sm text-gray-500">评审专业</p>
                   <p className="text-2xl font-bold text-blue-600">{report.reviews.length}</p>
@@ -271,12 +263,6 @@ export default function ExportPage() {
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <p className="text-sm text-gray-500">总意见数</p>
                   <p className="text-2xl font-bold text-yellow-600">{allReviewItems.length}</p>
-                </div>
-                <div className="bg-red-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">高严重度</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {allReviewItems.filter(i => i.severity === 'high').length}
-                  </p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4">
                   <p className="text-sm text-gray-500">已确认</p>
@@ -289,7 +275,7 @@ export default function ExportPage() {
 
             {/* 各专业汇总 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">各专业评分</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">各专业汇总</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {report.reviews.map((review) => (
                   <div key={review.profession} className="border border-gray-200 rounded-lg p-4">
@@ -297,24 +283,11 @@ export default function ExportPage() {
                       <h4 className="font-medium text-gray-900">
                         {getProfessionName(review.profession)}
                       </h4>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        review.overall_score >= 80 ? 'bg-green-100 text-green-800' :
-                        review.overall_score >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {review.overall_score}分
-                      </span>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-500">总意见:</span>
                         <span className="text-gray-900">{review.review_items.length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">高严重度:</span>
-                        <span className="text-gray-900">
-                          {review.review_items.filter(i => i.severity === 'high').length}
-                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">已确认:</span>
@@ -349,13 +322,6 @@ export default function ExportPage() {
                           <div className="flex items-center space-x-2 mb-2">
                             <span className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">
                               {item.professionName}
-                            </span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              item.severity === 'high' ? 'bg-red-100 text-red-800' :
-                              item.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {item.severity === 'high' ? '高' : item.severity === 'medium' ? '中' : '低'}
                             </span>
                           </div>
                           <p className="text-gray-900 mb-2">{item.description}</p>

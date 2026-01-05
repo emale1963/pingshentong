@@ -56,14 +56,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   console.log('[API] POST /api/reports/[id]/exports called');
-  
+
   try {
     const { id } = await params;
     const reportId = parseInt(id);
-    
-    const body = await request.json();
-    const { export_type = 'word' } = body;
-    
+
+    // 只支持Word格式导出
+    const export_type = 'word';
+
     console.log('[API] Creating export:', { reportId, export_type });
 
     // 尝试从数据库获取报告
@@ -115,15 +115,11 @@ export async function POST(
 
     // 创建导出记录
     const exportId = exportIdCounter++;
-    // 使用正确的文件扩展名
-    const fileExtension = export_type === 'word' ? 'docx' : 
-                          export_type === 'pdf' ? 'pdf' : 
-                          export_type === 'excel' ? 'xlsx' : 'docx';
-    const fileName = `评审报告_${report.id}_${new Date().getTime()}.${fileExtension}`;
-    
+    const fileName = `评审报告_${report.id}_${new Date().getTime()}.docx`;
+
     const exportRecord = {
       id: exportId,
-      export_type: export_type,
+      export_type: 'word',
       file_url: '',
       file_name: fileName,
       status: 'pending',
@@ -157,25 +153,17 @@ async function generateDocument(
   report: any
 ) {
   try {
-    console.log('[API] Generating document for export:', exportId, 'Type:', exportType);
+    console.log('[API] Generating Word document for export:', exportId);
 
-    // 生成Word文档（支持PDF和Excel导出，但实际都生成Word格式）
-    let docBuffer: Buffer;
-    
-    if (exportType === 'word' || exportType === 'pdf' || exportType === 'excel') {
-      docBuffer = await generateReviewReport(report, false);
-    } else {
-      throw new Error(`Unsupported export type: ${exportType}`);
-    }
+    // 生成Word文档
+    const docBuffer = await generateReviewReport(report);
 
     // 上传到对象存储
-    const fileKey = `exports/${exportId}_${report.id}_report.${exportType}`;
+    const fileKey = `exports/${exportId}_${report.id}_report.docx`;
     const uploadedKey = await storage.uploadFile({
       fileContent: docBuffer,
       fileName: fileKey,
-      contentType: exportType === 'pdf' ? 'application/pdf' : 
-                   exportType === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :
-                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     });
 
     console.log('[API] Document uploaded:', uploadedKey);

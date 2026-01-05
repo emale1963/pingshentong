@@ -60,6 +60,7 @@ export type ProfessionType =
   | 'electrical'
   | 'hvac'
   | 'fire'
+  | 'road'
   | 'landscape'
   | 'interior'
   | 'cost';
@@ -74,7 +75,7 @@ export interface Profession {
 }
 
 /**
- * 完整的工程专业列表（全专业分析）
+ * 完整的工程专业列表
  */
 export const ALL_PROFESSIONS: ProfessionType[] = [
   'architecture',
@@ -83,6 +84,7 @@ export const ALL_PROFESSIONS: ProfessionType[] = [
   'electrical',
   'hvac',
   'fire',
+  'road',
   'landscape',
   'interior',
   'cost',

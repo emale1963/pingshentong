@@ -12,7 +12,7 @@ interface FileUploadProps {
 export default function FileUpload({
   onFileSelect,
   accept = '.pdf,.doc,.docx',
-  maxSize = 50,
+  maxSize = 100,
   disabled = false,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);

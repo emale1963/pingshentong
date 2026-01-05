@@ -11,6 +11,7 @@ const PROFESSION_NAMES: Record<string, string> = {
   electrical: '电气',
   hvac: '暖通',
   fire: '消防',
+  road: '道路',
   landscape: '景观',
   interior: '室内',
   cost: '造价',
@@ -28,9 +29,9 @@ interface ReviewItem {
   id: string;
   description: string;
   standard: string;
-  severity: 'high' | 'medium' | 'low';
   suggestion: string;
   confirmed: boolean;
+  display_order?: number;
 }
 
 interface Review {
@@ -38,7 +39,6 @@ interface Review {
   profession: string;
   ai_analysis: string;
   manual_review: string;
-  overall_score: number;
   review_items: ReviewItem[];
   confirmed_items: string[];
 }
@@ -157,20 +157,6 @@ export default function ReviewPage() {
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
         {statusInfo.label}
-      </span>
-    );
-  };
-
-  const getSeverityBadge = (severity: string) => {
-    const severityMap = {
-      high: { label: '高', color: 'bg-red-100 text-red-800' },
-      medium: { label: '中', color: 'bg-yellow-100 text-yellow-800' },
-      low: { label: '低', color: 'bg-blue-100 text-blue-800' },
-    };
-    const severityInfo = severityMap[severity as keyof typeof severityMap];
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${severityInfo.color}`}>
-        {severityInfo.label}
       </span>
     );
   };
@@ -360,11 +346,6 @@ export default function ReviewPage() {
                 >
                   <div className="flex items-center space-x-2">
                     <span>{getProfessionName(review.profession)}</span>
-                    {review.overall_score && (
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
-                        {review.overall_score}分
-                      </span>
-                    )}
                   </div>
                 </button>
               ))}
@@ -404,10 +385,7 @@ export default function ReviewPage() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              {getSeverityBadge(item.severity)}
-                              <h4 className="font-medium text-gray-900">{item.description}</h4>
-                            </div>
+                            <h4 className="font-medium text-gray-900 mb-2">{item.description}</h4>
 
                             <div className="space-y-2 text-sm">
                               <div className="flex items-start">
