@@ -11,8 +11,8 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: '/', label: '报告提交' },
-    { href: '/reports', label: '我的报告' },
+    { href: '/', label: '上传文件' },
+    { href: '/reports', label: '评审记录' },
     { href: '/admin/dashboard', label: '后台管理' },
   ];
 
