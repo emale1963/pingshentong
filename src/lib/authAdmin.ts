@@ -3,8 +3,10 @@
  */
 
 import { cookies } from 'next/headers';
-import pool from './db';
-import bcrypt from 'bcrypt';
+import { userManager } from '@/storage/database';
+import { eq } from 'drizzle-orm';
+import { getDb } from 'coze-coding-dev-sdk';
+import { users, adminOperations } from '@/storage/database';
 
 export interface AdminUser {
   id: number;
@@ -37,59 +39,42 @@ export async function adminLogin(
   ip: string = 'unknown'
 ): Promise<{ success: boolean; user?: AdminUser; error?: string }> {
   try {
-    const client = await pool.connect();
+    // 验证用户登录
+    const user = await userManager.verifyLogin(username, password);
 
-    // 查询用户
-    const result = await client.query(
-      'SELECT * FROM users WHERE username = $1 AND is_admin = true',
-      [username]
-    );
-
-    if (result.rows.length === 0) {
-      client.release();
+    if (!user) {
       return { success: false, error: '用户名或密码错误' };
     }
 
-    const user = result.rows[0];
-
-    // 验证密码
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-
-    if (!isValidPassword) {
-      client.release();
-      return { success: false, error: '用户名或密码错误' };
+    // 检查是否是管理员
+    if (!user.isAdmin) {
+      return { success: false, error: '无管理员权限' };
     }
 
-    // 检查账户状态
-    if (user.status !== 'active') {
-      client.release();
-      return { success: false, error: '账户已被禁用' };
-    }
+    // 更新最后登录信息
+    await userManager.updateLastLogin(user.userId, ip);
+
+    // 记录操作日志
+    const db = await getDb();
+    await db.insert(adminOperations).values({
+      adminId: user.userId,
+      operationType: 'login',
+      operationModule: 'auth',
+      operationDetail: '管理员登录',
+      ipAddress: ip,
+      result: 'success',
+    });
 
     // 创建会话
     const sessionData: AdminSession = {
-      userId: user.id,
+      userId: user.userId,
       username: user.username,
-      isAdmin: user.is_admin,
+      isAdmin: user.isAdmin,
       loginAt: new Date().toISOString(),
       ip,
     };
 
     const sessionToken = Buffer.from(JSON.stringify(sessionData)).toString('base64');
-
-    // 更新最后登录信息
-    await client.query(
-      'UPDATE users SET last_login_at = CURRENT_TIMESTAMP, last_login_ip = $1 WHERE id = $2',
-      [ip, user.id]
-    );
-
-    // 记录操作日志
-    await client.query(`
-      INSERT INTO admin_operations (admin_id, operation_type, operation_module, operation_detail, ip_address, result)
-      VALUES ($1, 'login', 'auth', '管理员登录', $2, 'success')
-    `, [user.id, ip]);
-
-    client.release();
 
     // 设置Cookie
     const cookieStore = await cookies();
@@ -104,13 +89,13 @@ export async function adminLogin(
     return {
       success: true,
       user: {
-        id: user.id,
+        id: user.userId,
         username: user.username,
         email: user.email,
-        full_name: user.full_name,
+        full_name: user.fullName,
         role: user.role,
         status: user.status,
-        is_admin: user.is_admin,
+        is_admin: user.isAdmin,
       },
     };
   } catch (error) {
@@ -128,12 +113,15 @@ export async function adminLogout(userId: number, ip: string = 'unknown'): Promi
     cookieStore.delete(SESSION_COOKIE_NAME);
 
     // 记录操作日志
-    const client = await pool.connect();
-    await client.query(`
-      INSERT INTO admin_operations (admin_id, operation_type, operation_module, operation_detail, ip_address, result)
-      VALUES ($1, 'logout', 'auth', '管理员登出', $2, 'success')
-    `, [userId, ip]);
-    client.release();
+    const db = await getDb();
+    await db.insert(adminOperations).values({
+      adminId: userId,
+      operationType: 'logout',
+      operationModule: 'auth',
+      operationDetail: '管理员登出',
+      ipAddress: ip,
+      result: 'success',
+    });
   } catch (error) {
     console.error('[Auth] Logout error:', error);
   }
@@ -166,27 +154,20 @@ export async function getCurrentAdmin(): Promise<AdminUser | null> {
     }
 
     // 查询用户信息（确保用户仍然存在且是管理员）
-    const client = await pool.connect();
-    const result = await client.query(
-      'SELECT id, username, email, full_name, role, status, is_admin FROM users WHERE id = $1 AND is_admin = true',
-      [sessionData.userId]
-    );
-    client.release();
+    const user = await userManager.getUserById(sessionData.userId);
 
-    if (result.rows.length === 0) {
+    if (!user || !user.isAdmin || user.status !== 'active') {
       return null;
     }
 
-    const user = result.rows[0];
-
     return {
-      id: user.id,
+      id: user.userId,
       username: user.username,
       email: user.email,
-      full_name: user.full_name,
+      full_name: user.fullName,
       role: user.role,
       status: user.status,
-      is_admin: user.is_admin,
+      is_admin: user.isAdmin,
     };
   } catch (error) {
     console.error('[Auth] Get current admin error:', error);
@@ -221,29 +202,29 @@ export async function changeAdminPassword(
   ip: string = 'unknown'
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await pool.connect();
+    const db = await getDb();
+    const bcrypt = (await import('bcrypt')).default;
 
-    // 验证旧密码
-    const result = await client.query(
-      'SELECT password_hash FROM users WHERE id = $1 AND is_admin = true',
-      [userId]
-    );
+    // 获取用户
+    const [user] = await db
+      .select({
+        passwordHash: users.passwordHash,
+      })
+      .from(users)
+      .where(eq(users.userId, userId));
 
-    if (result.rows.length === 0) {
-      client.release();
+    if (!user) {
       return { success: false, error: '用户不存在' };
     }
 
-    const isValidOldPassword = await bcrypt.compare(oldPassword, result.rows[0].password_hash);
+    const isValidOldPassword = await bcrypt.compare(oldPassword, user.passwordHash);
 
     if (!isValidOldPassword) {
-      client.release();
       return { success: false, error: '原密码错误' };
     }
 
     // 验证新密码强度
     if (newPassword.length < 8) {
-      client.release();
       return { success: false, error: '密码长度至少8位' };
     }
 
@@ -252,29 +233,30 @@ export async function changeAdminPassword(
     const hasNumbers = /\d/.test(newPassword);
 
     if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-      client.release();
       return { success: false, error: '密码必须包含大小写字母和数字' };
     }
-
-    // 检查密码历史（防止使用最近的密码）
-    // 这里简化处理，实际应该有密码历史表
 
     // 加密新密码
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
     // 更新密码
-    await client.query(
-      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [newPasswordHash, userId]
-    );
+    await db
+      .update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.userId, userId));
 
     // 记录操作日志
-    await client.query(`
-      INSERT INTO admin_operations (admin_id, operation_type, operation_module, operation_detail, ip_address, result)
-      VALUES ($1, 'change_password', 'auth', '修改密码', $2, 'success')
-    `, [userId, ip]);
-
-    client.release();
+    await db.insert(adminOperations).values({
+      adminId: userId,
+      operationType: 'change_password',
+      operationModule: 'auth',
+      operationDetail: '修改密码',
+      ipAddress: ip,
+      result: 'success',
+    });
 
     return { success: true };
   } catch (error) {
@@ -297,29 +279,17 @@ export async function logAdminOperation(params: {
   errorMessage?: string;
 }): Promise<void> {
   try {
-    const client = await pool.connect();
-    await client.query(`
-      INSERT INTO admin_operations (
-        admin_id,
-        operation_type,
-        operation_module,
-        operation_detail,
-        operation_data,
-        ip_address,
-        result,
-        error_message
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, [
-      params.adminId,
-      params.operationType,
-      params.operationModule,
-      params.operationDetail,
-      params.operationData ? JSON.stringify(params.operationData) : null,
-      params.ip || 'unknown',
-      params.result || 'success',
-      params.errorMessage,
-    ]);
-    client.release();
+    const db = await getDb();
+    await db.insert(adminOperations).values({
+      adminId: params.adminId,
+      operationType: params.operationType,
+      operationModule: params.operationModule,
+      operationDetail: params.operationDetail,
+      operationData: params.operationData ? params.operationData : null,
+      ipAddress: params.ip || 'unknown',
+      result: params.result || 'success',
+      errorMessage: params.errorMessage,
+    });
   } catch (error) {
     console.error('[Auth] Log operation error:', error);
   }
@@ -330,23 +300,21 @@ export async function logAdminOperation(params: {
  */
 export async function checkPasswordRequiredChange(userId: number): Promise<boolean> {
   try {
-    const client = await pool.connect();
+    const db = await getDb();
+    const bcrypt = (await import('bcrypt')).default;
 
-    // 检查是否是默认密码（111111）
-    const result = await client.query(
-      'SELECT password_hash FROM users WHERE id = $1 AND is_admin = true',
-      [userId]
-    );
+    const [user] = await db
+      .select({
+        passwordHash: users.passwordHash,
+      })
+      .from(users)
+      .where(eq(users.userId, userId));
 
-    if (result.rows.length === 0) {
-      client.release();
+    if (!user) {
       return false;
     }
 
-    const isDefaultPassword = await bcrypt.compare('111111', result.rows[0].password_hash);
-
-    client.release();
-
+    const isDefaultPassword = await bcrypt.compare('111111', user.passwordHash);
     return isDefaultPassword;
   } catch (error) {
     console.error('[Auth] Check password required change error:', error);
