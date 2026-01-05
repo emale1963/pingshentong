@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminLogin, requireAdmin } from '@/lib/authAdmin';
+import { userManager } from '@/storage/database';
 
 export async function POST(request: NextRequest) {
   console.log('[API] POST /api/admin/login called');
@@ -61,7 +62,47 @@ export async function GET(request: NextRequest) {
   console.log('[API] GET /api/admin/login called');
 
   try {
-    // 检查是否已登录
+    // 首先尝试从header获取token
+    const token = request.headers.get('X-Session-Token');
+    
+    if (token) {
+      console.log('[API] Found token in header');
+      
+      try {
+        // 解析token
+        const sessionData = JSON.parse(
+          Buffer.from(token, 'base64').toString()
+        );
+        
+        console.log('[API] Token parsed:', { userId: sessionData.userId, username: sessionData.username });
+        
+        // 验证token
+        if (sessionData.userId && sessionData.username && sessionData.isAdmin) {
+          // 查询用户信息
+          const user = await userManager.getUserById(sessionData.userId);
+          
+          if (user && user.isAdmin && user.status === 'active') {
+            return NextResponse.json({
+              success: true,
+              user: {
+                id: user.userId,
+                username: user.username,
+                email: user.email,
+                full_name: user.fullName,
+                role: user.role,
+                status: user.status,
+                is_admin: user.isAdmin,
+              },
+            });
+          }
+        }
+      } catch (tokenError) {
+        console.error('[API] Token parse error:', tokenError);
+      }
+    }
+    
+    // 如果token验证失败，使用cookie验证
+    console.log('[API] Using cookie authentication');
     const admin = await requireAdmin();
 
     if (admin) {

@@ -146,12 +146,33 @@ export default function AdminLogin() {
           </div>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
+        <div className="mt-6 text-center text-sm text-gray-500 space-y-2">
           <p>默认账号：admin / 密码：123456</p>
           <p className="mt-1">首次登录后请修改密码</p>
           <p className="mt-2 text-xs text-blue-600">
             如果登录失败，请勾选"使用简化API"后重试
           </p>
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-xs text-gray-400 mb-2">调试工具：</p>
+            <div className="space-x-2">
+              <a href="/admin/token-login" className="text-blue-600 hover:underline text-xs">
+                Token登录模式（推荐）
+              </a>
+              <span className="text-gray-300">|</span>
+              <a href="/admin/test-token" className="text-blue-600 hover:underline text-xs">
+                Token测试
+              </a>
+            </div>
+            <div className="mt-2">
+              <a href="/admin/inline-test" className="text-blue-600 hover:underline text-xs">
+                内联测试
+              </a>
+              <span className="text-gray-300">|</span>
+              <a href="/admin/test-full-login" className="text-blue-600 hover:underline text-xs">
+                完整登录测试
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

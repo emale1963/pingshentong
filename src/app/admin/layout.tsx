@@ -22,8 +22,17 @@ export default function AdminLayout({
     try {
       console.log('[Layout] 检查登录状态，当前路径:', pathname);
 
+      // 尝试使用token认证
+      const token = localStorage.getItem('admin_session_token');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['X-Session-Token'] = token;
+        console.log('[Layout] 使用token认证');
+      }
+
       const response = await fetch('/api/admin/login', {
         credentials: 'include',
+        headers,
       });
 
       const data = await response.json();
@@ -61,10 +70,22 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
+      const token = localStorage.getItem('admin_session_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['X-Session-Token'] = token;
+      }
+
       await fetch('/api/admin/logout', {
         method: 'POST',
         credentials: 'include',
+        headers,
       });
+      
+      // 清除localStorage中的token
+      localStorage.removeItem('admin_session_token');
       router.push('/admin/login');
     } catch (error) {
       console.error('Logout error:', error);
