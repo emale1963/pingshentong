@@ -1,6 +1,8 @@
 import { LLMClient, Config } from 'coze-coding-dev-sdk';
 import { PROFESSION_NAMES, PROFESSION_PROMPTS } from '@/lib/prompts';
 import { AIModelType, AI_MODELS, DEFAULT_MODEL } from '@/types/models';
+import { professionPromptManager, professionFallbackReviewManager } from '@/storage/database/professionPromptManager';
+import type { ProfessionSystemPrompt } from '@/storage/database/shared/schema';
 
 interface ReviewItem {
   id: string;
@@ -18,6 +20,8 @@ interface ReviewResult {
 
 export class AIReviewService {
   private client?: LLMClient;
+  private systemPromptsCache: Map<string, ProfessionSystemPrompt> = new Map();
+  private cacheLoaded: boolean = false;
 
   private getClient(): LLMClient {
     if (!this.client) {
@@ -32,15 +36,61 @@ export class AIReviewService {
     return this.client;
   }
 
+  /**
+   * 从数据库加载系统提示词
+   * 如果数据库中没有，则使用硬编码的默认提示词
+   */
+  private async loadSystemPrompts(): Promise<void> {
+    if (this.cacheLoaded) return;
+
+    try {
+      const prompts = await professionPromptManager.getAllPrompts();
+      this.systemPromptsCache.clear();
+      
+      for (const prompt of prompts) {
+        if (prompt.isActive) {
+          this.systemPromptsCache.set(prompt.profession, prompt);
+        }
+      }
+      
+      console.log(`[AI Review Service] Loaded ${this.systemPromptsCache.size} system prompts from database`);
+      this.cacheLoaded = true;
+    } catch (error) {
+      console.error('[AI Review Service] Failed to load system prompts from database:', error);
+      // 如果数据库加载失败，使用硬编码提示词
+      this.cacheLoaded = true;
+    }
+  }
+
+  /**
+   * 获取专业的系统提示词
+   * 优先从数据库获取，如果没有则使用硬编码的默认提示词
+   */
+  private async getSystemPrompt(profession: string): Promise<string> {
+    await this.loadSystemPrompts();
+    
+    const cachedPrompt = this.systemPromptsCache.get(profession);
+    if (cachedPrompt) {
+      console.log(`[AI Review Service] Using database prompt for ${profession}`);
+      return cachedPrompt.promptContent;
+    }
+    
+    // 回退到硬编码提示词
+    const hardcodedPrompt = PROFESSION_PROMPTS[profession];
+    if (hardcodedPrompt) {
+      console.log(`[AI Review Service] Using hardcoded prompt for ${profession}`);
+      return hardcodedPrompt;
+    }
+    
+    throw new Error(`Unsupported profession: ${profession}`);
+  }
+
   async analyzeProfession(
     profession: string,
     reportSummary: string,
     modelType: AIModelType = DEFAULT_MODEL
   ): Promise<ReviewResult> {
-    const systemPrompt = PROFESSION_PROMPTS[profession];
-    if (!systemPrompt) {
-      throw new Error(`Unsupported profession: ${profession}`);
-    }
+    const systemPrompt = await this.getSystemPrompt(profession);
 
     const professionName = PROFESSION_NAMES[profession] || profession;
     const model = AI_MODELS[modelType] || AI_MODELS[DEFAULT_MODEL];
@@ -193,8 +243,43 @@ ${reportSummary}
   /**
    * 生成基于专业知识的降级评审结果
    * 当AI服务不可用时，返回各专业常见的评审要点
+   * 优先从数据库获取，如果没有则使用硬编码的默认评审要点
    */
-  private generateKnowledgeBasedReview(profession: string, errorMessage: string): ReviewResult {
+  private async generateKnowledgeBasedReview(profession: string, errorMessage: string): Promise<ReviewResult> {
+    const professionName = PROFESSION_NAMES[profession] || profession;
+    
+    try {
+      // 尝试从数据库获取降级评审要点
+      const fallbackReviews = await professionFallbackReviewManager.getReviewsByProfession(profession);
+      
+      if (fallbackReviews && fallbackReviews.length > 0) {
+        console.log(`[AI Review] ${profession}: Using database fallback reviews (${fallbackReviews.length} items)`);
+        
+        return {
+          profession,
+          ai_analysis: `${professionName}专业评审：由于AI自动分析暂时不可用，以下评审内容基于预设的专业评审要点库生成，建议结合实际设计图纸进行详细复核。`,
+          review_items: fallbackReviews.map((item, index) => ({
+            id: `${profession.substring(0, 4)}_${index + 1}`,
+            description: item.description,
+            standard: item.standard,
+            suggestion: item.suggestion,
+            display_order: item.displayOrder,
+          })),
+        } as ReviewResult;
+      }
+    } catch (error) {
+      console.error(`[AI Review] ${profession}: Failed to load fallback reviews from database`, error);
+    }
+    
+    // 回退到硬编码的降级评审要点
+    console.log(`[AI Review] ${profession}: Using hardcoded fallback reviews`);
+    return this.generateHardcodedFallbackReview(profession, errorMessage);
+  }
+
+  /**
+   * 使用硬编码的降级评审要点
+   */
+  private generateHardcodedFallbackReview(profession: string, errorMessage: string): ReviewResult {
     const professionName = PROFESSION_NAMES[profession] || profession;
     
     // 各专业的常见评审要点

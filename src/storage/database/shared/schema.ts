@@ -1,5 +1,7 @@
 import { pgTable, check, serial, integer, jsonb, text, varchar, bigint, timestamp, index, unique, boolean, numeric, foreignKey, uniqueIndex, date } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
+import { createSchemaFactory } from 'drizzle-zod'
+import { z } from 'zod'
 
 
 
@@ -187,3 +189,90 @@ export const systemLogs = pgTable("system_logs", {
 			name: "system_logs_user_id_fkey"
 		}),
 ]);
+
+// AI评审系统提示词表
+export const professionSystemPrompts = pgTable("profession_system_prompts", {
+	id: serial("id").primaryKey().notNull(),
+	profession: varchar({ length: 50 }).notNull().unique(),
+	promptContent: text("prompt_content").notNull(),
+	promptVersion: varchar({ length: 20 }).default("1.0"),
+	isActive: boolean("is_active").default(true),
+	createdBy: varchar("created_by", { length: 100 }),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	index("idx_profession_prompts_profession").using("btree", table.profession.asc().nullsLast().op("text_ops")),
+	index("idx_profession_prompts_active").using("btree", table.isActive.asc().nullsLast().op("bool_ops")),
+]);
+
+// 降级评审要点表
+export const professionFallbackReviews = pgTable("profession_fallback_reviews", {
+	id: serial("id").primaryKey().notNull(),
+	profession: varchar({ length: 50 }).notNull(),
+	description: text("description").notNull(),
+	standard: text("standard").notNull(),
+	suggestion: text("suggestion").notNull(),
+	displayOrder: integer("display_order").default(1),
+	isActive: boolean("is_active").default(true),
+	createdBy: varchar("created_by", { length: 100 }),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	index("idx_fallback_reviews_profession").using("btree", table.profession.asc().nullsLast().op("text_ops")),
+	index("idx_fallback_reviews_active").using("btree", table.isActive.asc().nullsLast().op("bool_ops")),
+	index("idx_fallback_reviews_order").using("btree", table.displayOrder.asc().nullsLast().op("int4_ops")),
+]);
+
+// 创建验证 schema
+const { createInsertSchema: createCoercedInsertSchema } = createSchemaFactory({
+  coerce: { date: true },
+});
+
+// 系统提示词的验证 schema
+export const insertProfessionSystemPromptSchema = createCoercedInsertSchema(professionSystemPrompts)
+  .pick({
+    profession: true,
+    promptContent: true,
+    promptVersion: true,
+    isActive: true,
+    createdBy: true,
+  });
+
+export const updateProfessionSystemPromptSchema = createCoercedInsertSchema(professionSystemPrompts)
+  .pick({
+    promptContent: true,
+    promptVersion: true,
+    isActive: true,
+  })
+  .partial();
+
+// 降级评审要点的验证 schema
+export const insertProfessionFallbackReviewSchema = createCoercedInsertSchema(professionFallbackReviews)
+  .pick({
+    profession: true,
+    description: true,
+    standard: true,
+    suggestion: true,
+    displayOrder: true,
+    isActive: true,
+    createdBy: true,
+  });
+
+export const updateProfessionFallbackReviewSchema = createCoercedInsertSchema(professionFallbackReviews)
+  .pick({
+    description: true,
+    standard: true,
+    suggestion: true,
+    displayOrder: true,
+    isActive: true,
+  })
+  .partial();
+
+// TypeScript 类型导出
+export type ProfessionSystemPrompt = typeof professionSystemPrompts.$inferSelect;
+export type InsertProfessionSystemPrompt = z.infer<typeof insertProfessionSystemPromptSchema>;
+export type UpdateProfessionSystemPrompt = z.infer<typeof updateProfessionSystemPromptSchema>;
+
+export type ProfessionFallbackReview = typeof professionFallbackReviews.$inferSelect;
+export type InsertProfessionFallbackReview = z.infer<typeof insertProfessionFallbackReviewSchema>;
+export type UpdateProfessionFallbackReview = z.infer<typeof updateProfessionFallbackReviewSchema>;
