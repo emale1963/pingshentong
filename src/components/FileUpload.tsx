@@ -150,6 +150,9 @@ export default function FileUpload({
             <p className="text-xs text-gray-500 text-center">
               支持 PDF、DOC、DOCX 格式，最大 {maxSize}MB
             </p>
+            <p className="text-xs text-gray-400 text-center mt-1">
+              标准PDF 1.4及以上版本，文本型PDF优先支持
+            </p>
           </div>
         </div>
       ) : (

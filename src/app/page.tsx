@@ -21,9 +21,12 @@ export default function Home() {
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
   const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelHealth, setModelHealth] = useState<Record<string, boolean>>({});
+  const [checkingHealth, setCheckingHealth] = useState(false);
 
   useEffect(() => {
     fetchModels();
+    checkModelsHealth();
   }, []);
 
   const fetchModels = async () => {
@@ -41,6 +44,30 @@ export default function Home() {
       console.error('Failed to fetch models:', error);
     } finally {
       setModelsLoading(false);
+    }
+  };
+
+  const checkModelsHealth = async () => {
+    try {
+      setCheckingHealth(true);
+      const response = await fetch('/api/models/health');
+      if (response.ok) {
+        const data = await response.json();
+        const healthMap: Record<string, boolean> = {};
+        data.models.forEach((model: any) => {
+          healthMap[model.modelId] = model.available;
+        });
+        setModelHealth(healthMap);
+
+        // 如果当前选中的模型不可用，切换到第一个可用模型
+        if (!healthMap[selectedModel] && data.availableModels.length > 0) {
+          setSelectedModel(data.availableModels[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check model health:', error);
+    } finally {
+      setCheckingHealth(false);
     }
   };
 
@@ -88,7 +115,7 @@ export default function Home() {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // 自动触发评审
         try {
           const reviewResponse = await fetch(`/api/reports/${result.id}/review`, {
@@ -96,18 +123,17 @@ export default function Home() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ modelType: selectedModel }),
           });
-          
+
           if (reviewResponse.ok) {
-            alert('报告提交成功！系统正在进行智能分析...');
-            // 跳转到报告详情页
+            // 直接跳转到报告详情页,不显示alert
             window.location.href = `/review/${result.id}`;
           } else {
-            alert('报告提交成功，但评审启动失败，请手动触发评审');
+            // 即使评审启动失败,也跳转到详情页,让用户手动触发
             window.location.href = `/review/${result.id}`;
           }
         } catch (reviewError) {
           console.error('Failed to start review:', reviewError);
-          alert('报告提交成功，但评审启动失败，请手动触发评审');
+          // 即使评审启动失败,也跳转到详情页
           window.location.href = `/review/${result.id}`;
         }
       } else {
@@ -148,13 +174,18 @@ export default function Home() {
               <p className="text-sm text-blue-800">
                 <span className="font-medium">支持文件格式：</span>PDF、DOC、DOCX
                 <span className="mx-2">|</span>
-                <span className="font-medium">最大文件大小：</span>100MB
+                <span className="font-medium">最大文件大小：</span>20MB
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                • 标准PDF 1.4及以上版本
+                <br />
+                • 文本型PDF优先支持
               </p>
             </div>
             <FileUpload
               onFileSelect={handleFileSelect}
               accept=".pdf,.doc,.docx"
-              maxSize={100}
+              maxSize={20}
               disabled={isSubmitting}
             />
           </div>
@@ -171,41 +202,70 @@ export default function Home() {
 
           {/* AI模型选择 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              选择 AI 模型
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-700">
+                选择 AI 模型
+              </label>
+              <button
+                type="button"
+                onClick={checkModelsHealth}
+                disabled={checkingHealth}
+                className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+              >
+                {checkingHealth ? '检测中...' : '检测模型状态'}
+              </button>
+            </div>
             {modelsLoading ? (
               <div className="text-center py-8 text-gray-500">加载模型列表中...</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {availableModels.map((model) => (
-                  <div
-                    key={model.id}
-                    onClick={() => !isSubmitting && setSelectedModel(model.id)}
-                    className={`
-                      p-4 border-2 rounded-lg cursor-pointer transition-all
-                      ${selectedModel === model.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                      }
-                      ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">{model.name}</h4>
-                      {selectedModel === model.id && (
-                        <span className="text-blue-500 text-xl">✓</span>
+                {availableModels.map((model) => {
+                  const isAvailable = modelHealth[model.id] !== undefined
+                    ? modelHealth[model.id]
+                    : true; // 默认认为可用
+                  const isUnhealthy = modelHealth[model.id] === false;
+
+                  return (
+                    <div
+                      key={model.id}
+                      onClick={() => !isSubmitting && isAvailable && setSelectedModel(model.id)}
+                      className={`
+                        p-4 border-2 rounded-lg transition-all
+                        ${selectedModel === model.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : isUnhealthy
+                          ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                          : 'border-gray-200 hover:border-gray-300'
+                        }
+                        ${isSubmitting ? 'opacity-50' : ''}
+                      `}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium text-gray-900 flex items-center">
+                          {model.name}
+                          <span className={`ml-2 w-2 h-2 rounded-full ${
+                            isAvailable ? 'bg-green-500' : 'bg-red-500'
+                          }`} />
+                        </h4>
+                        {selectedModel === model.id && (
+                          <span className="text-blue-500 text-xl">✓</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{model.description}</p>
+                      <p className="text-xs text-gray-500">提供商: {model.provider}</p>
+                      {model.isDefault && (
+                        <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          默认
+                        </span>
+                      )}
+                      {isUnhealthy && (
+                        <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+                          模型不可用
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{model.description}</p>
-                    <p className="text-xs text-gray-500">提供商: {model.provider}</p>
-                    {model.isDefault && (
-                      <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                        默认
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

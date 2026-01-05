@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Storage } from 'coze-coding-dev-sdk';
 import pool from '@/lib/db';
 import { tempStorage } from '@/lib/tempStorage';
+import { parsePDF } from '@/lib/pdfParser';
 
 // 初始化对象存储
 const storage = new S3Storage({
@@ -47,7 +48,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   console.log('[API] POST /api/reports called');
-  
+
+  // 最大文件大小：20MB
+  const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -64,6 +68,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 验证文件大小
+    if (file.size > MAX_FILE_SIZE) {
+      console.error('[API] Error: File too large, size:', file.size);
+      return NextResponse.json(
+        { error: `文件大小不能超过 ${MAX_FILE_SIZE / (1024 * 1024)}MB` },
+        { status: 400 }
+      );
+    }
+
     // 解析专业选择
     let professions: string[] = [];
     try {
@@ -75,6 +88,25 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid professions format' },
         { status: 400 }
       );
+    }
+
+    // 如果是PDF文件，进行解析分析
+    let pdfAnalysis = null;
+    if (file.type === 'application/pdf') {
+      try {
+        console.log('[API] Parsing PDF file...');
+        const fileBuffer = Buffer.from(await file.arrayBuffer());
+        pdfAnalysis = await parsePDF(fileBuffer);
+        console.log('[API] PDF analysis completed:', {
+          pageCount: pdfAnalysis.pageCount,
+          isScanned: pdfAnalysis.isScanned,
+          hasImages: pdfAnalysis.hasImages,
+          textLength: pdfAnalysis.text.length,
+        });
+      } catch (pdfError) {
+        console.error('[API] PDF parsing failed:', pdfError);
+        // PDF解析失败不影响流程，继续处理
+      }
     }
 
     // 上传文件到对象存储
