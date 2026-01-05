@@ -148,10 +148,18 @@ export default function Dashboard() {
       {/* 快捷操作 */}
       <div className="card">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">快捷操作</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <a href="/admin/review-configs" className="block p-4 border border-[var(--color-border-secondary)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-hover)] transition-all duration-[var(--transition-fast)]">
             <div className="text-sm font-medium text-[var(--color-text-primary)]">评审配置</div>
             <div className="text-xs text-[var(--color-text-tertiary)] mt-1">管理专业评审规则</div>
+          </a>
+          <a href="/admin/prompts" className="block p-4 border border-[var(--color-border-secondary)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-hover)] transition-all duration-[var(--transition-fast)]">
+            <div className="text-sm font-medium text-[var(--color-text-primary)]">AI评审提示词</div>
+            <div className="text-xs text-[var(--color-text-tertiary)] mt-1">管理AI提示词</div>
+          </a>
+          <a href="/admin/fallback-reviews" className="block p-4 border border-[var(--color-border-secondary)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-hover)] transition-all duration-[var(--transition-fast)]">
+            <div className="text-sm font-medium text-[var(--color-text-primary)]">降级评审要点</div>
+            <div className="text-xs text-[var(--color-text-tertiary)] mt-1">管理降级方案</div>
           </a>
           <a href="/admin/models" className="block p-4 border border-[var(--color-border-secondary)] rounded-[var(--radius-md)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-hover)] transition-all duration-[var(--transition-fast)]">
             <div className="text-sm font-medium text-[var(--color-text-primary)]">AI模型</div>
