@@ -192,7 +192,7 @@ export default function ExportPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
+    <div className="max-w-7xl mx-auto pt-[var(--navbar-height)] py-6 px-4">
       {/* 报告信息 */}
       <div className="mb-4">
         <div className="bg-white rounded-lg shadow-sm p-4">
@@ -255,58 +255,7 @@ export default function ExportPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* 报告汇总 - 紧凑布局 */}
-            <div className="border-b border-gray-100 pb-3">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">报告汇总</h3>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-blue-50 rounded p-3">
-                  <p className="text-xs text-gray-500">评审专业</p>
-                  <p className="text-xl font-bold text-blue-600">{report.reviews.length}</p>
-                </div>
-                <div className="bg-yellow-50 rounded p-3">
-                  <p className="text-xs text-gray-500">总意见数</p>
-                  <p className="text-xl font-bold text-yellow-600">{allReviewItems.length}</p>
-                </div>
-                <div className="bg-green-50 rounded p-3">
-                  <p className="text-xs text-gray-500">已确认</p>
-                  <p className="text-xl font-bold text-green-600">
-                    {allReviewItems.filter(i => i.confirmed).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 各专业汇总 - 紧凑布局 */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">各专业汇总</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {report.reviews.map((review) => (
-                  <div key={review.profession} className="border border-gray-200 rounded p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 text-sm">
-                        {getProfessionName(review.profession)}
-                      </h4>
-                    </div>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">总意见:</span>
-                        <span className="text-gray-900">{review.review_items.length}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">已确认:</span>
-                        <span className="text-gray-900">
-                          {review.review_items.filter(i =>
-                            review.confirmed_items.includes(i.id) || i.confirmed
-                          ).length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 意见列表（仅显示已确认的）- 紧凑布局 */}
+            {/* 意见列表（仅显示已确认的）*/}
             {allReviewItems.filter(i => i.confirmed).length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">
