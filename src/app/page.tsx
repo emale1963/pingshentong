@@ -176,12 +176,9 @@ export default function Home() {
         <div className="max-w-[var(--max-width-content)] mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* 页面标题 */}
           <div className="text-center mb-12 fade-in">
-            <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">
-              提交报告
+            <h1 className="text-4xl font-bold text-[var(--color-text-primary)]">
+              请上传评审文件
             </h1>
-            <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-              上传报告，选择评审专业，系统将使用AI进行智能评审分析
-            </p>
           </div>
 
           {/* 主卡片 */}
@@ -192,19 +189,6 @@ export default function Home() {
                 <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
                   上传文件
                 </label>
-
-                <div className="mb-4 p-4 bg-[var(--color-bg-secondary)] rounded-[var(--radius-md)] border border-[var(--color-border-secondary)]">
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    <span className="font-medium">支持格式：</span>PDF、DOC、DOCX
-                    <span className="mx-2">|</span>
-                    <span className="font-medium">最大大小：</span>20MB
-                  </p>
-                  <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
-                    • 标准PDF 1.4及以上版本
-                    <br />
-                    • 文本型PDF优先支持
-                  </p>
-                </div>
 
                 <FileUpload
                   onFileSelect={handleFileSelect}
@@ -398,38 +382,6 @@ export default function Home() {
             </div>
           </form>
 
-          {/* 使用说明 */}
-          <div className="max-w-4xl mx-auto mt-8">
-            <div className="card bg-[var(--color-brand-primary-light)] border-[var(--color-brand-primary)]">
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">使用说明</h3>
-              <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 mr-2 text-[var(--color-brand-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>支持上传 PDF、DOC、DOCX 格式文件，最大 50MB</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 mr-2 text-[var(--color-brand-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>可选择一个或多个专业进行评审，选择"全专业"将覆盖其他选项</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 mr-2 text-[var(--color-brand-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>提交后系统将自动进行 AI 智能评审分析</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 mr-2 text-[var(--color-brand-primary)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>评审完成后可在评审页面查看详细的分析结果</span>
-                </li>
-              </ul>
-            </div>
-          </div>
         </div>
       </div>
     </div>
