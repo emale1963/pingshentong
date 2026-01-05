@@ -88,11 +88,8 @@ export default function MyReports() {
           {/* 页面标题 */}
           <div className="mb-8 fade-in">
             <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
-              我的报告
+              评审记录
             </h1>
-            <p className="mt-2 text-[var(--color-text-secondary)]">
-              查看和管理您提交的所有可研报告
-            </p>
           </div>
 
           {loading ? (
@@ -115,12 +112,11 @@ export default function MyReports() {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <h3 className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">暂无报告</h3>
-              <p className="mt-2 text-[var(--color-text-secondary)]">您还没有提交任何可研报告</p>
+              <h3 className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">主人，没查到您的评审记录</h3>
               <div className="mt-6">
                 <Link
                   href="/"
-                  className="inline-flex items-center px-6 py-2.5 border border-transparent rounded-[var(--radius-base)] text-sm font-medium text-[var(--color-text-inverse)] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] transition-all duration-[var(--transition-fast)]"
+                  className="inline-flex items-center px-6 py-2.5 border border-transparent rounded-[var(--radius-base)] text-sm font-medium text-white bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] transition-all duration-[var(--transition-fast)]"
                 >
                   提交新报告
                 </Link>
