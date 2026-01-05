@@ -39,12 +39,24 @@ export async function adminLogin(
   ip: string = 'unknown'
 ): Promise<{ success: boolean; user?: AdminUser; error?: string }> {
   try {
+    console.log('[Auth] Login attempt:', { username, ip });
+
     // 验证用户登录
     const user = await userManager.verifyLogin(username, password);
 
+    console.log('[Auth] User verification result:', user ? 'success' : 'failed');
+
     if (!user) {
+      console.log('[Auth] User not found or invalid password');
       return { success: false, error: '用户名或密码错误' };
     }
+
+    console.log('[Auth] User data:', {
+      userId: user.userId,
+      username: user.username,
+      isAdmin: user.isAdmin,
+      status: user.status,
+    });
 
     // 检查是否是管理员
     if (!user.isAdmin) {
@@ -54,16 +66,21 @@ export async function adminLogin(
     // 更新最后登录信息
     await userManager.updateLastLogin(user.userId, ip);
 
-    // 记录操作日志
-    const db = await getDb();
-    await db.insert(adminOperations).values({
-      adminId: user.userId,
-      operationType: 'login',
-      operationModule: 'auth',
-      operationDetail: '管理员登录',
-      ipAddress: ip,
-      result: 'success',
-    });
+    // 记录操作日志（可选操作，失败不影响登录）
+    try {
+      const db = await getDb();
+      await db.insert(adminOperations).values({
+        adminId: user.userId,
+        operationType: 'login',
+        operationModule: 'auth',
+        operationDetail: '管理员登录',
+        ipAddress: ip,
+        result: 'success',
+      });
+    } catch (logError) {
+      console.error('[Auth] Failed to log operation:', logError);
+      // 不影响登录流程
+    }
 
     // 创建会话
     const sessionData: AdminSession = {
@@ -107,6 +124,11 @@ export async function adminLogin(
     };
   } catch (error) {
     console.error('[Auth] Login error:', error);
+    console.error('[Auth] Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
     return { success: false, error: '登录失败，请稍后重试' };
   }
 }
@@ -119,16 +141,20 @@ export async function adminLogout(userId: number, ip: string = 'unknown'): Promi
     const cookieStore = await cookies();
     cookieStore.delete(SESSION_COOKIE_NAME);
 
-    // 记录操作日志
-    const db = await getDb();
-    await db.insert(adminOperations).values({
-      adminId: userId,
-      operationType: 'logout',
-      operationModule: 'auth',
-      operationDetail: '管理员登出',
-      ipAddress: ip,
-      result: 'success',
-    });
+    // 记录操作日志（可选操作，失败不影响登出）
+    try {
+      const db = await getDb();
+      await db.insert(adminOperations).values({
+        adminId: userId,
+        operationType: 'logout',
+        operationModule: 'auth',
+        operationDetail: '管理员登出',
+        ipAddress: ip,
+        result: 'success',
+      });
+    } catch (logError) {
+      console.error('[Auth] Failed to log logout:', logError);
+    }
   } catch (error) {
     console.error('[Auth] Logout error:', error);
   }

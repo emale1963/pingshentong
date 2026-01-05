@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('123456');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
+  const [useSimpleApi, setUseSimpleApi] = useState(false);
 
   // 页面加载时清除错误
   useEffect(() => {
@@ -25,9 +26,11 @@ export default function AdminLogin() {
     console.log('[Login] 开始登录流程');
     console.log('[Login] 用户名:', username);
     console.log('[Login] 密码长度:', password.length);
+    console.log('[Login] 使用简化API:', useSimpleApi);
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const apiUrl = useSimpleApi ? '/api/admin/simple-login' : '/api/admin/login';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,11 +132,26 @@ export default function AdminLogin() {
           >
             {loading ? '登录中...' : '登录'}
           </button>
+
+          <div className="flex items-center justify-center mt-4">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useSimpleApi}
+                onChange={(e) => setUseSimpleApi(e.target.checked)}
+                className="rounded text-blue-600"
+              />
+              <span className="text-sm text-gray-600">使用简化API（无日志记录）</span>
+            </label>
+          </div>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>默认账号：admin / 密码：123456</p>
           <p className="mt-1">首次登录后请修改密码</p>
+          <p className="mt-2 text-xs text-blue-600">
+            如果登录失败，请勾选"使用简化API"后重试
+          </p>
         </div>
       </div>
     </div>

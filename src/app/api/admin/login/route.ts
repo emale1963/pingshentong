@@ -8,6 +8,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { username, password } = body;
 
+    console.log('[API] Request body:', { username, passwordLength: password?.length });
+
     // 验证请求参数
     if (!username || !password) {
       return NextResponse.json(
@@ -21,8 +23,15 @@ export async function POST(request: NextRequest) {
                request.headers.get('x-real-ip') ||
                'unknown';
 
+    console.log('[API] Calling adminLogin...');
     // 尝试登录
     const result = await adminLogin(username, password, ip);
+
+    console.log('[API] adminLogin result:', {
+      success: result.success,
+      hasUser: !!result.user,
+      error: result.error,
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -37,6 +46,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[API] Login error:', error);
+    console.error('[API] Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       { error: '登录失败，请稍后重试' },
       { status: 500 }
