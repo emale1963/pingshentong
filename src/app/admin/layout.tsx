@@ -16,11 +16,9 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  useEffect(() => {
-    checkLoginStatus();
-  }, [pathname]);
-
+  // 检查登录状态
   const checkLoginStatus = async () => {
+    setLoading(true);
     try {
       console.log('[Layout] 检查登录状态，当前路径:', pathname);
 
@@ -38,11 +36,6 @@ export default function AdminLayout({
       } else {
         console.log('[Layout] 用户未登录');
         setIsLoggedIn(false);
-        // 如果不是登录页面，跳转到登录页
-        if (!pathname.includes('/login')) {
-          console.log('[Layout] 重定向到登录页');
-          router.push('/admin/login');
-        }
       }
     } catch (error) {
       console.error('[Layout] Check login status error:', error);
@@ -51,6 +44,20 @@ export default function AdminLayout({
       setLoading(false);
     }
   };
+
+  // 当路径变化时检查登录状态
+  useEffect(() => {
+    checkLoginStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // 使用单独的effect处理重定向，避免在render中调用router.push
+  useEffect(() => {
+    if (!loading && !isLoggedIn && !pathname.includes('/login')) {
+      console.log('[Layout] Effect: 重定向到登录页');
+      router.push('/admin/login');
+    }
+  }, [loading, isLoggedIn, pathname, router]);
 
   const handleLogout = async () => {
     try {
@@ -78,8 +85,7 @@ export default function AdminLayout({
   }
 
   if (!isLoggedIn) {
-    // 未登录时重定向到登录页
-    router.push('/admin/login');
+    // 未登录时不渲染内容，重定向由useEffect处理
     return null;
   }
 
