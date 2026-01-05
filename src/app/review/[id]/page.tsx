@@ -96,9 +96,10 @@ export default function ReviewPage() {
         const data = await response.json();
         setReport(data);
 
-        if (data.reviews && data.reviews.length > 0 && !selectedTab) {
-          setSelectedTab(data.reviews[0].profession);
-        }
+        // 不自动切换到第一个专业，让用户自己选择
+        // if (data.reviews && data.reviews.length > 0 && !selectedTab) {
+        //   setSelectedTab(data.reviews[0].profession);
+        // }
       } else if (response.status === 404) {
         setError('报告不存在');
       } else {
@@ -373,7 +374,24 @@ export default function ReviewPage() {
                 </div>
 
                 {/* 评审详情 */}
-                {selectedReview && (
+                {!selectedTab ? (
+                  <div className="p-12 text-center">
+                    <svg
+                      className="mx-auto h-16 w-16 text-[var(--color-border-primary)] mb-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <p className="text-[var(--color-text-secondary)]">请选择专业查看评审意见</p>
+                  </div>
+                ) : selectedReview && (
                   <div className="p-6">
                     {/* AI 分析概要 */}
                     {selectedReview.ai_analysis && (
