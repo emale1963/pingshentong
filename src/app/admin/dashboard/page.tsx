@@ -25,6 +25,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // 每1分钟自动刷新
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
@@ -63,19 +70,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">仪表盘</h1>
-          <p className="mt-1 text-[var(--color-text-secondary)]">系统概览与数据统计</p>
-        </div>
-        <button
-          onClick={fetchDashboardData}
-          className="px-4 py-2 bg-[var(--color-brand-primary)] text-[var(--color-text-inverse)] rounded-[var(--radius-base)] hover:bg-[var(--color-brand-primary-hover)] transition-all duration-[var(--transition-fast)]"
-        >
-          刷新数据
-        </button>
-      </div>
-
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card">
