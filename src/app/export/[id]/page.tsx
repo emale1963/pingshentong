@@ -223,7 +223,6 @@ export default function ExportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">导出评审报告</h2>
-                <p className="text-xs text-gray-500 mt-0.5">.docx 格式，包含完整的评审意见和AI分析</p>
               </div>
               <button
                 onClick={() => handleExport('word')}
