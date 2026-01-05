@@ -260,8 +260,8 @@ export default function FallbackReviewsManagementPage() {
 
         {/* 创建评审要点弹窗 */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto relative z-[101]">
               <div className="px-6 py-4 border-b">
                 <h2 className="text-xl font-bold">添加评审要点</h2>
               </div>
@@ -387,8 +387,8 @@ export default function FallbackReviewsManagementPage() {
 
         {/* 编辑评审要点弹窗 */}
         {editingReview && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto relative z-[101]">
               <div className="px-6 py-4 border-b">
                 <h2 className="text-xl font-bold">编辑评审要点</h2>
               </div>

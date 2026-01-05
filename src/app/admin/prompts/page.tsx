@@ -216,8 +216,8 @@ export default function PromptsManagementPage() {
 
         {/* 创建提示词弹窗 */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto relative z-[101]">
               <div className="px-6 py-4 border-b">
                 <h2 className="text-xl font-bold">添加提示词</h2>
               </div>
@@ -311,8 +311,8 @@ export default function PromptsManagementPage() {
 
         {/* 编辑提示词弹窗 */}
         {editingPrompt && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto relative z-[101]">
               <div className="px-6 py-4 border-b">
                 <h2 className="text-xl font-bold">编辑提示词</h2>
               </div>
