@@ -63,6 +63,7 @@ export default function ReviewPage() {
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
   const [modelsLoading, setModelsLoading] = useState(false);
+  const [checkedItems, setCheckedItems] = useState<Record<string, Set<string>>>({});
 
   useEffect(() => {
     fetchReport();
@@ -100,6 +101,15 @@ export default function ReviewPage() {
         // if (data.reviews && data.reviews.length > 0 && !selectedTab) {
         //   setSelectedTab(data.reviews[0].profession);
         // }
+
+        // 根据数据库中的confirmed_items初始化勾选状态
+        if (data.reviews) {
+          const newCheckedItems: Record<string, Set<string>> = {};
+          data.reviews.forEach((review: Review) => {
+            newCheckedItems[review.profession] = new Set(review.confirmed_items || []);
+          });
+          setCheckedItems(newCheckedItems);
+        }
       } else if (response.status === 404) {
         setError('报告不存在');
       } else {
@@ -113,17 +123,49 @@ export default function ReviewPage() {
     }
   };
 
-  const handleConfirmItem = async (profession: string, itemId: string) => {
+  const handleToggleCheck = async (profession: string, itemId: string) => {
+    // 先确定新的状态
+    const isChecked = checkedItems[profession]?.has(itemId) || false;
+    const newCheckedStatus = !isChecked;
+
+    // 更新本地状态
+    setCheckedItems(prev => {
+      const newChecked = { ...prev };
+      const professionItems = new Set(newChecked[profession] || []);
+
+      if (newCheckedStatus) {
+        professionItems.add(itemId);
+      } else {
+        professionItems.delete(itemId);
+      }
+
+      newChecked[profession] = professionItems;
+      return newChecked;
+    });
+
+    // 同步到数据库
     try {
       await fetch(`/api/reports/${report?.id}/reviews/${profession}/confirm`, {
-        method: 'POST',
+        method: newCheckedStatus ? 'POST' : 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itemId }),
       });
-
-      fetchReport();
     } catch (error) {
-      console.error('Failed to confirm item:', error);
+      console.error('Failed to update check status:', error);
+      // 如果失败，恢复本地状态
+      setCheckedItems(prev => {
+        const newChecked = { ...prev };
+        const professionItems = new Set(newChecked[profession] || []);
+
+        if (newCheckedStatus) {
+          professionItems.delete(itemId);
+        } else {
+          professionItems.add(itemId);
+        }
+
+        newChecked[profession] = professionItems;
+        return newChecked;
+      });
     }
   };
 
@@ -441,8 +483,8 @@ export default function ReviewPage() {
                                 <div className="ml-4">
                                   <input
                                     type="checkbox"
-                                    checked={selectedReview.confirmed_items.includes(item.id) || item.confirmed}
-                                    onChange={() => handleConfirmItem(selectedReview.profession, item.id)}
+                                    checked={checkedItems[selectedReview.profession]?.has(item.id) || false}
+                                    onChange={() => handleToggleCheck(selectedReview.profession, item.id)}
                                     className="w-5 h-5 text-[var(--color-brand-primary)] border-[var(--color-border-primary)] rounded-[var(--radius-sm)] focus:ring-[var(--color-brand-primary)]"
                                   />
                                 </div>

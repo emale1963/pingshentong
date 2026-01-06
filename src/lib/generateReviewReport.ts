@@ -55,9 +55,12 @@ interface Report {
 export async function generateReviewReport(report: Report): Promise<Buffer> {
   const { reviews, file_name, created_at, id } = report;
 
-  // 统计数据
+  // 统计数据（只统计已确认的意见）
   const totalReviews = reviews.length;
-  const totalItems = reviews.reduce((sum, r) => sum + r.review_items.length, 0);
+  const totalItems = reviews.reduce((sum, r) =>
+    sum + r.review_items.filter(i => i.confirmed || r.confirmed_items.includes(i.id)).length,
+    0
+  );
 
   // 创建文档内容
   const docChildren: any[] = [];
@@ -200,10 +203,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
       );
     }
 
-    // 评审意见（按display_order排序）
-    const sortedItems = [...review.review_items].sort((a, b) =>
-      (a.display_order || 0) - (b.display_order || 0)
-    );
+    // 评审意见（按display_order排序，只导出已确认的）
+    const sortedItems = [...review.review_items]
+      .filter(item => item.confirmed || review.confirmed_items.includes(item.id))
+      .sort((a, b) =>
+        (a.display_order || 0) - (b.display_order || 0)
+      );
 
     sortedItems.forEach((item, itemIndex) => {
       const itemNumber = `${reviewIndex + 1}.${itemIndex + 1}`;
@@ -283,8 +288,15 @@ function createReviewSummaryTable(reviews: Review[]): (Paragraph | Table)[] {
         }),
       ],
     }),
-    ...reviews.map(review =>
-      new TableRow({
+    ...reviews.map(review => {
+      const confirmedItems = review.review_items.filter(i =>
+        i.confirmed || review.confirmed_items.includes(i.id)
+      );
+      const unconfirmedItems = review.review_items.filter(i =>
+        !i.confirmed && !review.confirmed_items.includes(i.id)
+      );
+
+      return new TableRow({
         children: [
           new TableCell({
             children: [new Paragraph(PROFESSION_NAMES[review.profession] || review.profession)],
@@ -295,20 +307,16 @@ function createReviewSummaryTable(reviews: Review[]): (Paragraph | Table)[] {
             verticalAlign: VerticalAlign.CENTER,
           }),
           new TableCell({
-            children: [
-              new Paragraph(String(review.review_items.filter(i => i.confirmed).length)),
-            ],
+            children: [new Paragraph(String(confirmedItems.length))],
             verticalAlign: VerticalAlign.CENTER,
           }),
           new TableCell({
-            children: [
-              new Paragraph(String(review.review_items.filter(i => !i.confirmed).length)),
-            ],
+            children: [new Paragraph(String(unconfirmedItems.length))],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ],
-      })
-    ),
+      });
+    }),
   ];
 
   return [
