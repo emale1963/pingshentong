@@ -2,6 +2,7 @@ import { LLMClient, Config } from 'coze-coding-dev-sdk';
 import { PROFESSION_NAMES, PROFESSION_PROMPTS } from '@/lib/prompts';
 import { AIModelType, AI_MODELS, DEFAULT_MODEL } from '@/types/models';
 import { professionPromptManager, professionFallbackReviewManager } from '@/storage/database/professionPromptManager';
+import { standardsLibraryService } from '@/services/standardsLibraryService';
 import type { ProfessionSystemPrompt } from '@/storage/database/shared/schema';
 
 interface ReviewItem {
@@ -95,9 +96,25 @@ export class AIReviewService {
     const professionName = PROFESSION_NAMES[profession] || profession;
     const model = AI_MODELS[modelType] || AI_MODELS[DEFAULT_MODEL];
 
+    // 从规范资料库获取相关的规范参考
+    let standardsReference = '';
+    try {
+      standardsReference = await standardsLibraryService.getRelevantStandardsForReview(
+        profession,
+        reportSummary,
+        5
+      );
+      console.log(`[AI Review] Retrieved standards reference for ${profession}`);
+    } catch (error) {
+      console.error(`[AI Review] Failed to get standards reference for ${profession}:`, error);
+      standardsReference = '本次评审暂无预设规范资料库参考，请基于专业知识进行评审。';
+    }
+
     const userPrompt = `请对以下报告的${professionName}专业进行评审：
 
 ${reportSummary}
+
+${standardsReference}
 
 请严格按照以下JSON格式返回评审结果，不要包含任何其他文字说明：
 
@@ -127,8 +144,9 @@ ${reportSummary}
 3. review_items提供5-10条评审意见
 4. 每条意见必须包含id、description、standard、suggestion四个字段
 5. id使用格式：${profession.substring(0, 4)}_序号（如${profession.substring(0, 4)}_1、${profession.substring(0, 4)}_2）
-6. 标准应引用相关的国家规范或标准（如GB 50016-2014第5.3.1条）
+6. 标准应引用相关的国家规范或标准（如GB 50016-2014第5.3.1条），优先参考上述规范资料库
 7. 即使信息有限，也要基于${professionName}专业知识和常见问题提供有意义的评审意见
+8. 如果规范资料库中有相关条款，请优先引用这些条款
 
 请直接返回JSON格式的评审结果，不要包含任何其他文字。`;
 
