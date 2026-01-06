@@ -33,8 +33,22 @@ export default function Home() {
   const [checkingHealth, setCheckingHealth] = useState(false);
 
   useEffect(() => {
+    // 页面加载时重置所有状态
+    handleReset();
     fetchModels();
     checkModelsHealth();
+  }, []);
+
+  // 当从其他页面返回时也重置状态
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        handleReset();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const fetchModels = async () => {
