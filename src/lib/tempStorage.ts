@@ -132,14 +132,28 @@ class TempStorage {
     const item = review.review_items.find(i => i.id === itemId);
     if (!item) return false;
 
-    item.confirmed = !item.confirmed;
-    if (item.confirmed && !review.confirmed_items.includes(itemId)) {
+    item.confirmed = true;
+    if (!review.confirmed_items.includes(itemId)) {
       review.confirmed_items.push(itemId);
-    } else if (!item.confirmed) {
-      const index = review.confirmed_items.indexOf(itemId);
-      if (index > -1) {
-        review.confirmed_items.splice(index, 1);
-      }
+    }
+
+    return true;
+  }
+
+  unconfirmReviewItem(reportId: number, profession: string, itemId: string): boolean {
+    const report = this.reviews.get(reportId);
+    if (!report) return false;
+
+    const review = report.find(r => r.profession === profession);
+    if (!review) return false;
+
+    const item = review.review_items.find(i => i.id === itemId);
+    if (!item) return false;
+
+    item.confirmed = false;
+    const index = review.confirmed_items.indexOf(itemId);
+    if (index > -1) {
+      review.confirmed_items.splice(index, 1);
     }
 
     return true;
@@ -586,10 +600,10 @@ class TempStorage {
           id: this.reviewIdCounter++,
           review_items: template.review_items.map((item, index) => ({
             ...item,
-            confirmed: false,
+            confirmed: true,
             display_order: index + 1,
           })),
-          confirmed_items: [],
+          confirmed_items: template.review_items.map(item => item.id),
           manual_review: '',
           created_at: now,
           updated_at: now,
