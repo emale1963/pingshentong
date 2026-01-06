@@ -76,6 +76,42 @@ CREATE TABLE IF NOT EXISTS exports (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 规范资料库表
+CREATE TABLE IF NOT EXISTS standards_library (
+    id SERIAL PRIMARY KEY,
+    category VARCHAR(50) NOT NULL,  -- 专业分类：architecture、structure、plumbing等
+    code VARCHAR(100) NOT NULL,    -- 规范编号：GB 50016-2014
+    title VARCHAR(500) NOT NULL,    -- 规范名称：建筑设计防火规范
+    short_name VARCHAR(200),        -- 简称：防火规范
+    version VARCHAR(50),            -- 版本号：2014版
+    publish_date DATE,              -- 发布日期
+    effective_date DATE,             -- 生效日期
+    status VARCHAR(20) DEFAULT 'current' CHECK (status IN ('current', 'revised', 'deprecated')),  -- 规范状态
+    content TEXT,                    -- 规范内容
+    keywords TEXT,                   -- 关键词（逗号分隔）：防火、疏散、安全出口
+    summary TEXT,                    -- 规范摘要
+    attachment_url TEXT,             -- 规范附件URL
+    is_active BOOLEAN DEFAULT TRUE, -- 是否启用
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(category, code, version)
+);
+
+-- 规范条款表
+CREATE TABLE IF NOT EXISTS standard_articles (
+    id SERIAL PRIMARY KEY,
+    standard_id INTEGER REFERENCES standards_library(id) ON DELETE CASCADE,
+    article_code VARCHAR(50) NOT NULL,  -- 条款编号：5.3.1
+    article_content TEXT NOT NULL,     -- 条款内容
+    section_code VARCHAR(50),          -- 章节编号：5.3
+    section_title VARCHAR(200),         -- 章节标题
+    keywords TEXT,                      -- 条款关键词
+    requirement_level VARCHAR(20) DEFAULT 'mandatory' CHECK (requirement_level IN ('mandatory', 'recommended', 'reference')),  -- 要求级别
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 索引创建
 CREATE INDEX idx_reports_user_id ON reports(user_id);
 CREATE INDEX idx_reports_status ON reports(status);
