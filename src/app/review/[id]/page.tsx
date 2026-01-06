@@ -97,10 +97,10 @@ export default function ReviewPage() {
         const data = await response.json();
         setReport(data);
 
-        // 不自动切换到第一个专业，让用户自己选择
-        // if (data.reviews && data.reviews.length > 0 && !selectedTab) {
-        //   setSelectedTab(data.reviews[0].profession);
-        // }
+        // 自动切换到第一个专业，提升用户体验
+        if (data.reviews && data.reviews.length > 0 && !selectedTab) {
+          setSelectedTab(data.reviews[0].profession);
+        }
 
         // 根据数据库中的confirmed_items初始化勾选状态
         if (data.reviews) {

@@ -47,9 +47,9 @@ export function getAIModel(modelId: string): AIModel | undefined {
 }
 
 /**
- * 默认使用的模型 - 优先使用豆包Seed(已确认可用)
+ * 默认使用的模型 - 优先使用Kimi K2
  */
-export const DEFAULT_MODEL: AIModelType = 'doubao-seed';
+export const DEFAULT_MODEL: AIModelType = 'kimi-k2';
 
 /**
  * 所有的工程专业类型
