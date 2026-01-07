@@ -96,7 +96,7 @@ export default function AdminLogin() {
             className="w-full py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:opacity-90"
             style={{ backgroundColor: 'var(--color-brand-primary)', color: 'var(--color-text-inverse)' }}
           >
-            {loading ? '登录中...' : '登            录'}
+            {loading ? '登录中...' : '登                  录'}
           </button>
         </form>
       </div>
