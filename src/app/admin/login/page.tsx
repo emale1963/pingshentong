@@ -50,8 +50,7 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">后台管理系统</h1>
-          <p className="text-sm text-gray-600">管理员登录</p>
+          <h1 className="text-2xl font-bold text-gray-900">后台管理系统</h1>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -99,10 +98,6 @@ export default function AdminLogin() {
             {loading ? '登录中...' : '登录'}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>默认账号：admin / 密码：1111</p>
-        </div>
       </div>
     </div>
   );
