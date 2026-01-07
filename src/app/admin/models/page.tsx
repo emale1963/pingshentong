@@ -361,51 +361,64 @@ export default function ModelsPage() {
         </div>
       </div>
 
-      {/* 模型列表 - 卡片网格 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {models.map((model) => (
-          <div
-            key={model.modelId}
-            className={`
-              bg-white rounded-lg shadow-md border-2 transition-all hover:shadow-lg
-              ${model.isDefault ? 'border-blue-500' : 'border-gray-200'}
-              ${!model.enabled ? 'opacity-60' : ''}
-            `}
-          >
-            <div className="p-5">
-              {/* 头部：名称和标签 */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-semibold text-gray-900">{model.name}</h3>
-                    {model.isDefault && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                        默认
-                      </span>
-                    )}
-                    {model.isCustom && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                        自定义
-                      </span>
-                    )}
+      {/* 模型列表 */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                模型名称
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                提供商
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                连接状态
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                响应时间
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                启用状态
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                操作
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {models.map((model) => (
+              <tr
+                key={model.modelId}
+                className={`
+                  ${model.isDefault ? 'bg-blue-50' : ''}
+                  ${!model.enabled ? 'opacity-60' : ''}
+                `}
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div>
+                      <div className="flex items-center">
+                        <div className="text-sm font-medium text-gray-900">{model.name}</div>
+                        {model.isDefault && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            默认
+                          </span>
+                        )}
+                        {model.isCustom && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            自定义
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">{model.description}</div>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">{model.description}</p>
-                </div>
-              </div>
-
-              {/* 提供商 */}
-              <div className="flex items-center text-sm text-gray-600 mb-3">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span>{model.provider}</span>
-              </div>
-
-              {/* 状态信息 */}
-              <div className="space-y-2 mb-4">
-                {/* 连接状态 */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">连接状态:</span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{model.provider}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <span className={`inline-flex items-center justify-center h-2 w-2 rounded-full ${
                       model.available ? 'bg-green-500' : 'bg-red-500'
@@ -416,87 +429,73 @@ export default function ModelsPage() {
                       {model.available ? '可用' : '不可用'}
                     </span>
                   </div>
-                </div>
-
-                {/* 响应时间 */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">响应时间:</span>
-                  <span className="text-sm font-medium text-gray-900">
+                  {model.error && (
+                    <div className="text-xs text-red-500 mt-1 truncate max-w-xs" title={model.error}>
+                      {model.error}
+                    </div>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
                     {model.responseTime ? `${model.responseTime}ms` : '-'}
-                  </span>
-                </div>
-
-                {/* 启用状态 */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">启用状态:</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`text-sm font-medium ${
                     model.enabled ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {model.enabled ? '已启用' : '已禁用'}
                   </span>
-                </div>
-              </div>
-
-              {/* 错误信息 */}
-              {model.error && (
-                <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded">
-                  <p className="text-xs text-red-600" title={model.error}>
-                    {model.error}
-                  </p>
-                </div>
-              )}
-
-              {/* 操作按钮 */}
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-                <button
-                  onClick={() => handleTest(model.modelId)}
-                  disabled={testing || !model.enabled || !model.available}
-                  className="flex-1 min-w-[70px] px-3 py-1.5 text-sm bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  测试
-                </button>
-                <button
-                  onClick={() => handleToggleEnabled(model.modelId, !model.enabled)}
-                  disabled={updating}
-                  className={`flex-1 min-w-[70px] px-3 py-1.5 text-sm rounded transition-colors ${
-                    model.enabled
-                      ? 'bg-orange-50 text-orange-700 hover:bg-orange-100'
-                      : 'bg-green-50 text-green-700 hover:bg-green-100'
-                  }`}
-                >
-                  {model.enabled ? '禁用' : '启用'}
-                </button>
-                {!model.isDefault && model.enabled && (
-                  <button
-                    onClick={() => handleSetDefault(model.modelId)}
-                    disabled={updating}
-                    className="flex-1 min-w-[70px] px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
-                  >
-                    设为默认
-                  </button>
-                )}
-                {model.isCustom && (
-                  <>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => handleConfigAPI(model.modelId)}
-                      disabled={updating}
-                      className="flex-1 min-w-[70px] px-3 py-1.5 text-sm bg-purple-50 text-purple-700 rounded hover:bg-purple-100 transition-colors"
+                      onClick={() => handleTest(model.modelId)}
+                      disabled={testing || !model.enabled || !model.available}
+                      className="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed"
                     >
-                      配置API
+                      测试
                     </button>
                     <button
-                      onClick={() => handleDeleteCustomModel(model.modelId)}
+                      onClick={() => handleToggleEnabled(model.modelId, !model.enabled)}
                       disabled={updating}
-                      className="flex-1 min-w-[70px] px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors"
+                      className={model.enabled ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}
                     >
-                      删除
+                      {model.enabled ? '禁用' : '启用'}
                     </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+                    {!model.isDefault && model.enabled && (
+                      <button
+                        onClick={() => handleSetDefault(model.modelId)}
+                        disabled={updating}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        设为默认
+                      </button>
+                    )}
+                    {model.isCustom && (
+                      <button
+                        onClick={() => handleConfigAPI(model.modelId)}
+                        disabled={updating}
+                        className="text-purple-600 hover:text-purple-900"
+                      >
+                        配置API
+                      </button>
+                    )}
+                    {model.isCustom && (
+                      <button
+                        onClick={() => handleDeleteCustomModel(model.modelId)}
+                        disabled={updating}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        删除
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* 添加外部模型弹窗 */}
