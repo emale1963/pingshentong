@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { modelId, action } = body;
+    const { modelId, action, apiConfig } = body;
 
     if (!modelId || !action) {
       return NextResponse.json(
@@ -52,6 +52,43 @@ export async function POST(request: NextRequest) {
         }
         console.log('[API] Default model set:', typedModelId);
         break;
+
+      case 'updateAPIConfig':
+        // 更新 API 配置
+        if (!apiConfig || !apiConfig.endpoint) {
+          return NextResponse.json(
+            { error: 'API 配置中必须提供端点地址 (endpoint)' },
+            { status: 400 }
+          );
+        }
+
+        const config = modelConfigManager.getModelConfig(modelId);
+        if (!config) {
+          return NextResponse.json(
+            { error: '模型配置不存在' },
+            { status: 404 }
+          );
+        }
+
+        // 更新 API 配置
+        modelConfigManager.updateModelConfig(modelId, {
+          apiConfig: {
+            endpoint: apiConfig.endpoint,
+            ...(apiConfig.apiKey && { apiKey: apiConfig.apiKey }),
+            ...(apiConfig.apiVersion && { apiVersion: apiConfig.apiVersion }),
+            ...(apiConfig.model && { model: apiConfig.model }),
+          }
+        });
+
+        console.log('[API] API config updated for model:', modelId);
+
+        // 返回更新后的配置
+        const updatedConfig = modelConfigManager.getModelConfig(modelId);
+        return NextResponse.json({
+          success: true,
+          message: 'API 配置更新成功',
+          config: updatedConfig,
+        });
 
       default:
         return NextResponse.json(
