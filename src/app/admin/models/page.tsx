@@ -501,8 +501,8 @@ export default function ModelsPage() {
       {/* 添加外部模型弹窗 */}
       {showAddModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+            <div className="p-6 overflow-y-auto flex-1">
               <h3 className="text-lg font-medium text-gray-900 mb-4">添加外部模型</h3>
               <form onSubmit={handleAddCustomModel} className="space-y-4">
                 <div>
@@ -659,8 +659,8 @@ export default function ModelsPage() {
       {/* 配置API弹窗 */}
       {showConfigModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+            <div className="p-6 overflow-y-auto flex-1">
               <h3 className="text-lg font-medium text-gray-900 mb-4">配置API</h3>
               <p className="text-sm text-gray-600 mb-4">
                 为模型 <span className="font-medium text-gray-900">{configModel}</span> 配置API
