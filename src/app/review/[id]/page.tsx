@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 
@@ -64,6 +64,7 @@ export default function ReviewPage() {
   const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
   const [modelsLoading, setModelsLoading] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, Set<string>>>({});
+  const tabInitializedRef = useRef(false);
 
   useEffect(() => {
     fetchReport();
@@ -71,6 +72,14 @@ export default function ReviewPage() {
     const interval = setInterval(fetchReport, 3000);
     return () => clearInterval(interval);
   }, [params.id]);
+
+  // 初始化选中专业标签页（只在首次加载时执行一次）
+  useEffect(() => {
+    if (report && report.reviews && report.reviews.length > 0 && !tabInitializedRef.current) {
+      setSelectedTab(report.reviews[0].profession);
+      tabInitializedRef.current = true;
+    }
+  }, [report]);
 
   const fetchModels = async () => {
     try {
@@ -96,11 +105,6 @@ export default function ReviewPage() {
       if (response.ok) {
         const data = await response.json();
         setReport(data);
-
-        // 只在还没有选择任何专业时自动切换到第一个专业
-        if (!selectedTab && data.reviews && data.reviews.length > 0) {
-          setSelectedTab(data.reviews[0].profession);
-        }
 
         // 根据数据库中的confirmed_items初始化勾选状态
         if (data.reviews) {
@@ -312,15 +316,6 @@ export default function ReviewPage() {
     <div className="min-h-screen bg-[var(--color-bg-secondary)]">
       <div className="pt-[var(--navbar-height)]">
         <div className="max-w-[var(--max-width-content)] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* 返回按钮 */}
-          <Button
-            variant="secondary"
-            onClick={() => router.back()}
-            className="mb-6"
-          >
-            ← 返回
-          </Button>
-
           {/* 报告信息 */}
           <div className="card mb-6">
             <div className="flex items-start justify-between">
