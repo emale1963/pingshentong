@@ -15,6 +15,14 @@ export interface ModelConfig {
   priority: number; // 优先级，用于选择模型时排序
   lastUpdated: string;
   isCustom: boolean; // 是否为自定义模型
+
+  // 自定义模型的API配置
+  apiConfig?: {
+    endpoint: string; // API端点URL
+    apiKey?: string; // API密钥
+    apiVersion?: string; // API版本
+    model?: string; // 实际模型名称
+  };
 }
 
 class ModelConfigManager {
@@ -110,7 +118,18 @@ class ModelConfigManager {
   /**
    * 添加自定义模型
    */
-  addCustomModel(modelId: string, name: string, description: string, provider: string): ModelConfig {
+  addCustomModel(
+    modelId: string,
+    name: string,
+    description: string,
+    provider: string,
+    apiConfig?: {
+      endpoint: string;
+      apiKey?: string;
+      apiVersion?: string;
+      model?: string;
+    }
+  ): ModelConfig {
     const now = new Date().toISOString();
 
     const newConfig: ModelConfig = {
@@ -123,6 +142,7 @@ class ModelConfigManager {
       priority: this.nextPriority++,
       lastUpdated: now,
       isCustom: true,
+      apiConfig: apiConfig ? { ...apiConfig } : undefined,
     };
 
     this.configs.set(modelId, newConfig);
