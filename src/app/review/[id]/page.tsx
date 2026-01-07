@@ -64,7 +64,6 @@ export default function ReviewPage() {
   const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
   const [modelsLoading, setModelsLoading] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, Set<string>>>({});
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     fetchReport();
@@ -98,10 +97,9 @@ export default function ReviewPage() {
         const data = await response.json();
         setReport(data);
 
-        // 只在第一次加载时自动切换到第一个专业，避免后续刷新时跳转
-        if (!isInitialized && data.reviews && data.reviews.length > 0 && !selectedTab) {
+        // 只在还没有选择任何专业时自动切换到第一个专业
+        if (!selectedTab && data.reviews && data.reviews.length > 0) {
           setSelectedTab(data.reviews[0].profession);
-          setIsInitialized(true);
         }
 
         // 根据数据库中的confirmed_items初始化勾选状态
@@ -166,6 +164,53 @@ export default function ReviewPage() {
         }
 
         newChecked[profession] = professionItems;
+        return newChecked;
+      });
+    }
+  };
+
+  const handleSelectAll = async (profession: string) => {
+    const review = report?.reviews.find(r => r.profession === profession);
+    if (!review) return;
+
+    const currentChecked = checkedItems[profession] || new Set();
+    const allSelected = review.review_items.every(item => currentChecked.has(item.id));
+    const selectAll = !allSelected;
+
+    // 更新本地状态
+    setCheckedItems(prev => {
+      const newChecked = { ...prev };
+      if (selectAll) {
+        // 全选：将该专业所有意见都选中
+        newChecked[profession] = new Set(review.review_items.map(item => item.id));
+      } else {
+        // 取消全选：清空该专业的所有选中
+        newChecked[profession] = new Set();
+      }
+      return newChecked;
+    });
+
+    // 同步到数据库
+    try {
+      const itemsToConfirm = selectAll
+        ? review.review_items.map(item => item.id)
+        : [];
+
+      await fetch(`/api/reports/${report?.id}/reviews/${profession}/confirm-batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemIds: itemsToConfirm }),
+      });
+    } catch (error) {
+      console.error('Failed to batch update check status:', error);
+      // 如果失败，恢复本地状态
+      setCheckedItems(prev => {
+        const newChecked = { ...prev };
+        if (selectAll) {
+          newChecked[profession] = new Set();
+        } else {
+          newChecked[profession] = new Set(review.review_items.map(item => item.id));
+        }
         return newChecked;
       });
     }
@@ -455,9 +500,21 @@ export default function ReviewPage() {
                     {/* 评审意见列表 */}
                     {selectedReview.review_items && selectedReview.review_items.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
-                          评审意见 ({selectedReview.review_items.length}条)
-                        </h3>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                            评审意见 ({selectedReview.review_items.length}条)
+                          </h3>
+                          <button
+                            onClick={() => handleSelectAll(selectedReview.profession)}
+                            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-light)] rounded-[var(--radius-md)] transition-colors"
+                          >
+                            <span>
+                              {selectedReview.review_items.every(item => (checkedItems[selectedReview.profession] || new Set()).has(item.id))
+                                ? '取消全选'
+                                : '全选'}
+                            </span>
+                          </button>
+                        </div>
 
                         <div className="space-y-4">
                           {selectedReview.review_items.map((item) => (

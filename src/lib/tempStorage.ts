@@ -159,6 +159,34 @@ class TempStorage {
     return true;
   }
 
+  batchConfirmReviewItems(reportId: number, profession: string, itemIds: string[]): boolean {
+    const report = this.reviews.get(reportId);
+    if (!report) return false;
+
+    const review = report.find(r => r.profession === profession);
+    if (!review) return false;
+
+    // 更新所有指定item的confirmed状态
+    itemIds.forEach(itemId => {
+      const item = review.review_items.find(i => i.id === itemId);
+      if (item) {
+        if (itemIds.includes(itemId)) {
+          item.confirmed = true;
+          if (!review.confirmed_items.includes(itemId)) {
+            review.confirmed_items.push(itemId);
+          }
+        }
+      }
+    });
+
+    // 清理不在itemIds列表中的confirmed_items（用于取消全选）
+    review.confirmed_items = review.confirmed_items.filter(itemId =>
+      itemIds.includes(itemId)
+    );
+
+    return true;
+  }
+
   // 生成模拟评审数据
   generateMockReviews(professions: string[], reportId: number): TempReview[] {
     const reviewTemplates: Record<string, {

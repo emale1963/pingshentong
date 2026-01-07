@@ -65,10 +65,6 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
       spacing: {
         after: convertInchesToTwip(0.3),
       },
-      style: {
-        font: '仿宋',
-        size: 24, // 三号字
-      },
     })
   );
 
@@ -81,10 +77,6 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
         before: convertInchesToTwip(0.2),
         after: convertInchesToTwip(0.2),
       },
-      style: {
-        font: '仿宋',
-        size: 14, // 四号字
-      },
     }),
 
     new Paragraph({
@@ -93,12 +85,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
           text: '原报告名称: ',
           bold: true,
           font: '仿宋',
-          size: 12, // 小四
+          size: 24, // 小四号（12磅）
         }),
         new TextRun({
           text: file_name,
           font: '仿宋',
-          size: 12,
+          size: 24,
         }),
       ],
       spacing: { after: 150, line: 450 }, // 1.5倍行距
@@ -110,12 +102,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
           text: '评审专业: ',
           bold: true,
           font: '仿宋',
-          size: 12,
+          size: 24,
         }),
         new TextRun({
           text: report.professions.map(p => PROFESSION_NAMES[p] || p).join('、'),
           font: '仿宋',
-          size: 12,
+          size: 24,
         }),
       ],
       spacing: { after: 150, line: 450 },
@@ -130,10 +122,6 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
       spacing: {
         before: convertInchesToTwip(0.3),
         after: convertInchesToTwip(0.2),
-      },
-      style: {
-        font: '仿宋',
-        size: 14,
       },
     })
   );
@@ -150,10 +138,6 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
           before: convertInchesToTwip(0.25),
           after: convertInchesToTwip(0.15),
         },
-        style: {
-          font: '仿宋',
-          size: 14,
-        },
       })
     );
 
@@ -166,12 +150,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
               text: '评审通: ',
               bold: true,
               font: '仿宋',
-              size: 12,
+              size: 24, // 小四号
             }),
             new TextRun({
               text: review.ai_analysis,
               font: '仿宋',
-              size: 12,
+              size: 24,
             }),
           ],
           spacing: { after: 200, line: 450 },
@@ -196,12 +180,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
               text: `${itemNumber}. 问题描述：`,
               bold: true,
               font: '仿宋',
-              size: 12,
+              size: 24, // 小四号
             }),
             new TextRun({
               text: item.description,
               font: '仿宋',
-              size: 12,
+              size: 24,
             }),
           ],
           spacing: { before: 200, after: 150, line: 450 },
@@ -213,12 +197,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
               text: '    规范依据：',
               bold: true,
               font: '仿宋',
-              size: 12,
+              size: 24,
             }),
             new TextRun({
               text: item.standard,
               font: '仿宋',
-              size: 12,
+              size: 24,
             }),
           ],
           spacing: { after: 150, line: 450 },
@@ -230,12 +214,12 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
               text: '    修改建议：',
               bold: true,
               font: '仿宋',
-              size: 12,
+              size: 24,
             }),
             new TextRun({
               text: item.suggestion,
               font: '仿宋',
-              size: 12,
+              size: 24,
             }),
           ],
           spacing: { after: 300, line: 450 }, // 每条意见间额外空行
