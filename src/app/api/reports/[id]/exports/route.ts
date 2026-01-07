@@ -115,7 +115,22 @@ export async function POST(
 
     // 创建导出记录
     const exportId = exportIdCounter++;
-    const fileName = `评审报告_${report.id}_${new Date().getTime()}.docx`;
+    
+    // 格式化时间为 YYYY-MM-DD-HHmmss
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timeStr = `${year}-${month}-${day}-${hours}${minutes}${seconds}`;
+    
+    // 获取原始文件名（去除扩展名）
+    const originalFileName = report.file_name || '未知文档';
+    const fileNameWithoutExt = originalFileName.replace(/\.[^/.]+$/, '');
+    
+    const fileName = `【评审通】${fileNameWithoutExt}_${timeStr}.docx`;
 
     const exportRecord = {
       id: exportId,
