@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminLogin() {
   const router = useRouter();
+  const { login } = useAuth();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('1111');
   const [loading, setLoading] = useState(false);
@@ -14,10 +16,6 @@ export default function AdminLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    console.log('[Login] 开始登录流程');
-    console.log('[Login] 用户名:', username);
-    console.log('[Login] 密码:', password);
 
     try {
       const response = await fetch('/api/admin/simple-auth', {
@@ -29,23 +27,19 @@ export default function AdminLogin() {
         credentials: 'include',
       });
 
-      console.log('[Login] 响应状态:', response.status);
-      console.log('[Login] 响应OK:', response.ok);
-
       const data = await response.json();
-      console.log('[Login] 响应数据:', data);
 
       if (response.ok && data.success) {
-        console.log('[Login] 登录成功，准备跳转');
-        // 等待cookie被设置
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // 立即更新AuthContext的用户状态
+        login(data.user);
+        // 短暂延迟确保cookie已设置
+        await new Promise(resolve => setTimeout(resolve, 100));
         router.push('/admin/dashboard');
       } else {
-        console.log('[Login] 登录失败:', data.error);
         setError(data.error || '登录失败，请检查用户名和密码');
       }
     } catch (error) {
-      console.error('[Login] 网络错误:', error);
+      console.error('Login error:', error);
       setError('网络错误，请稍后重试');
     } finally {
       setLoading(false);
