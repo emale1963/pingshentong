@@ -3,13 +3,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface AdminUser {
-  id: number;
   username: string;
-  email: string;
-  full_name: string;
-  role: string;
-  status: string;
-  is_admin: boolean;
+  isAdmin: boolean;
 }
 
 export interface AuthContextType {
@@ -27,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/admin/login');
+      const response = await fetch('/api/admin/simple-auth');
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user) {
@@ -43,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/admin/logout', { method: 'POST' });
+      await fetch('/api/admin/simple-auth/logout', { method: 'POST' });
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {

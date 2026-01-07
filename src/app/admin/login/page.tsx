@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
@@ -9,14 +9,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('1111');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [debugInfo, setDebugInfo] = useState('');
-  const [useSimpleApi, setUseSimpleApi] = useState(false);
-
-  // 页面加载时清除错误
-  useEffect(() => {
-    setError('');
-    setDebugInfo('');
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,12 +17,10 @@ export default function AdminLogin() {
 
     console.log('[Login] 开始登录流程');
     console.log('[Login] 用户名:', username);
-    console.log('[Login] 密码长度:', password.length);
-    console.log('[Login] 使用简化API:', useSimpleApi);
+    console.log('[Login] 密码:', password);
 
     try {
-      const apiUrl = useSimpleApi ? '/api/admin/simple-login' : '/api/admin/login';
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/admin/simple-auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,25 +34,14 @@ export default function AdminLogin() {
 
       const data = await response.json();
       console.log('[Login] 响应数据:', data);
-      console.log('[Login] response.ok:', response.ok, 'data.success:', data.success);
-      
-      // 在页面上显示调试信息
-      setDebugInfo(JSON.stringify({
-        status: response.status,
-        ok: response.ok,
-        data: data,
-      }, null, 2));
 
       if (response.ok && data.success) {
         console.log('[Login] 登录成功，准备跳转');
-        console.log('[Login] Response headers:', response.headers);
-        // 等待更长时间确保cookie被设置
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log('[Login] 开始跳转到dashboard');
+        // 等待cookie被设置
+        await new Promise(resolve => setTimeout(resolve, 300));
         router.push('/admin/dashboard');
       } else {
         console.log('[Login] 登录失败:', data.error);
-        console.log('[Login] response.ok:', response.ok, 'data:', data);
         setError(data.error || '登录失败，请检查用户名和密码');
       }
     } catch (error) {
@@ -118,13 +97,6 @@ export default function AdminLogin() {
             </div>
           )}
 
-          {debugInfo && (
-            <div className="bg-gray-100 border border-gray-300 text-gray-800 px-4 py-3 rounded-lg text-xs font-mono overflow-auto max-h-40">
-              <div className="font-bold mb-2">调试信息:</div>
-              <pre>{debugInfo}</pre>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
@@ -132,47 +104,10 @@ export default function AdminLogin() {
           >
             {loading ? '登录中...' : '登录'}
           </button>
-
-          <div className="flex items-center justify-center mt-4">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useSimpleApi}
-                onChange={(e) => setUseSimpleApi(e.target.checked)}
-                className="rounded text-blue-600"
-              />
-              <span className="text-sm text-gray-600">使用简化API（无日志记录）</span>
-            </label>
-          </div>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500 space-y-2">
+        <div className="mt-6 text-center text-sm text-gray-500">
           <p>默认账号：admin / 密码：1111</p>
-          <p className="mt-1">首次登录后请修改密码</p>
-          <p className="mt-2 text-xs text-blue-600">
-            如果登录失败，请先 <a href="/admin/init" className="hover:underline">初始化管理员账号</a>
-          </p>
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-xs text-gray-400 mb-2">调试工具：</p>
-            <div className="space-x-2">
-              <a href="/admin/token-login" className="text-blue-600 hover:underline text-xs">
-                Token登录模式（推荐）
-              </a>
-              <span className="text-gray-300">|</span>
-              <a href="/admin/test-token" className="text-blue-600 hover:underline text-xs">
-                Token测试
-              </a>
-            </div>
-            <div className="mt-2">
-              <a href="/admin/inline-test" className="text-blue-600 hover:underline text-xs">
-                内联测试
-              </a>
-              <span className="text-gray-300">|</span>
-              <a href="/admin/test-full-login" className="text-blue-600 hover:underline text-xs">
-                完整登录测试
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </div>
