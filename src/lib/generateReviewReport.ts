@@ -5,14 +5,12 @@ import {
   TextRun,
   HeadingLevel,
   AlignmentType,
-  BorderStyle,
   Table,
   TableRow,
   TableCell,
   WidthType,
   VerticalAlign,
   convertInchesToTwip,
-  PageBreak,
 } from 'docx';
 
 const PROFESSION_NAMES: Record<string, string> = {
@@ -55,13 +53,6 @@ interface Report {
 export async function generateReviewReport(report: Report): Promise<Buffer> {
   const { reviews, file_name, created_at, id } = report;
 
-  // 统计数据（只统计已确认的意见）
-  const totalReviews = reviews.length;
-  const totalItems = reviews.reduce((sum, r) =>
-    sum + r.review_items.filter(i => i.confirmed || r.confirmed_items.includes(i.id)).length,
-    0
-  );
-
   // 创建文档内容
   const docChildren: any[] = [];
 
@@ -74,39 +65,25 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
       spacing: {
         after: convertInchesToTwip(0.3),
       },
-    }),
-    new Paragraph({
-      text: `报告编号: ${id}`,
-      alignment: AlignmentType.CENTER,
-      spacing: {
-        after: convertInchesToTwip(0.2),
+      style: {
+        font: '仿宋',
+        size: 24, // 三号字
       },
-    }),
-    new Paragraph({
-      text: `生成时间: ${new Date(created_at).toLocaleString('zh-CN')}`,
-      alignment: AlignmentType.CENTER,
-      spacing: {
-        after: convertInchesToTwip(0.5),
-      },
-    }),
+    })
+  );
 
-    // 分隔线
-    new Paragraph({
-      text: '─'.repeat(50),
-      alignment: AlignmentType.CENTER,
-      spacing: {
-        before: convertInchesToTwip(0.2),
-        after: convertInchesToTwip(0.4),
-      },
-    }),
-
-    // 一、项目概述
+  // 项目概述
+  docChildren.push(
     new Paragraph({
       text: '一、项目概述',
       heading: HeadingLevel.HEADING_2,
       spacing: {
         before: convertInchesToTwip(0.2),
         after: convertInchesToTwip(0.2),
+      },
+      style: {
+        font: '仿宋',
+        size: 14, // 四号字
       },
     }),
 
@@ -115,10 +92,16 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
         new TextRun({
           text: '原报告名称: ',
           bold: true,
+          font: '仿宋',
+          size: 12, // 小四
         }),
-        new TextRun(file_name),
+        new TextRun({
+          text: file_name,
+          font: '仿宋',
+          size: 12,
+        }),
       ],
-      spacing: { after: 100 },
+      spacing: { after: 150, line: 450 }, // 1.5倍行距
     }),
 
     new Paragraph({
@@ -126,51 +109,31 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
         new TextRun({
           text: '评审专业: ',
           bold: true,
+          font: '仿宋',
+          size: 12,
         }),
-        new TextRun(report.professions.map(p => PROFESSION_NAMES[p] || p).join('、')),
-      ],
-      spacing: { after: 100 },
-    }),
-
-    // 二、评审汇总
-    new Paragraph({
-      text: '二、评审汇总',
-      heading: HeadingLevel.HEADING_2,
-      spacing: {
-        before: convertInchesToTwip(0.2),
-        after: convertInchesToTwip(0.2),
-      },
-    }),
-
-    new Paragraph({
-      children: [
-        new TextRun('本次评审共涉及 '),
         new TextRun({
-          text: String(totalReviews),
-          bold: true,
+          text: report.professions.map(p => PROFESSION_NAMES[p] || p).join('、'),
+          font: '仿宋',
+          size: 12,
         }),
-        new TextRun(' 个专业，'),
-        new TextRun({
-          text: String(totalItems),
-          bold: true,
-        }),
-        new TextRun(' 条评审意见。'),
       ],
-      spacing: { after: 200 },
-    }),
-
-    // 评审统计表
-    ...createReviewSummaryTable(reviews),
+      spacing: { after: 150, line: 450 },
+    })
   );
 
-  // 三、专业评审详情
+  // 专业评审详情
   docChildren.push(
     new Paragraph({
-      text: '三、专业评审详情',
+      text: '二、专业评审详情',
       heading: HeadingLevel.HEADING_2,
       spacing: {
         before: convertInchesToTwip(0.3),
         after: convertInchesToTwip(0.2),
+      },
+      style: {
+        font: '仿宋',
+        size: 14,
       },
     })
   );
@@ -187,18 +150,31 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
           before: convertInchesToTwip(0.25),
           after: convertInchesToTwip(0.15),
         },
+        style: {
+          font: '仿宋',
+          size: 14,
+        },
       })
     );
 
-    // AI分析
+    // 评审通（原AI分析）
     if (review.ai_analysis) {
       docChildren.push(
         new Paragraph({
           children: [
-            new TextRun({ text: 'AI分析: ', bold: true }),
-            new TextRun(review.ai_analysis),
+            new TextRun({
+              text: '评审通: ',
+              bold: true,
+              font: '仿宋',
+              size: 12,
+            }),
+            new TextRun({
+              text: review.ai_analysis,
+              font: '仿宋',
+              size: 12,
+            }),
           ],
-          spacing: { after: 150 },
+          spacing: { after: 200, line: 450 },
         })
       );
     }
@@ -219,10 +195,16 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
             new TextRun({
               text: `${itemNumber}. 问题描述：`,
               bold: true,
+              font: '仿宋',
+              size: 12,
             }),
-            new TextRun(item.description),
+            new TextRun({
+              text: item.description,
+              font: '仿宋',
+              size: 12,
+            }),
           ],
-          spacing: { before: 150, after: 100 },
+          spacing: { before: 200, after: 150, line: 450 },
         }),
 
         new Paragraph({
@@ -230,10 +212,16 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
             new TextRun({
               text: '    规范依据：',
               bold: true,
+              font: '仿宋',
+              size: 12,
             }),
-            new TextRun(item.standard),
+            new TextRun({
+              text: item.standard,
+              font: '仿宋',
+              size: 12,
+            }),
           ],
-          spacing: { after: 100 },
+          spacing: { after: 150, line: 450 },
         }),
 
         new Paragraph({
@@ -241,10 +229,16 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
             new TextRun({
               text: '    修改建议：',
               bold: true,
+              font: '仿宋',
+              size: 12,
             }),
-            new TextRun(item.suggestion),
+            new TextRun({
+              text: item.suggestion,
+              font: '仿宋',
+              size: 12,
+            }),
           ],
-          spacing: { after: 250 },
+          spacing: { after: 300, line: 450 }, // 每条意见间额外空行
         })
       );
     });
@@ -264,77 +258,4 @@ export async function generateReviewReport(report: Report): Promise<Buffer> {
   });
 
   return await Packer.toBuffer(doc);
-}
-
-function createReviewSummaryTable(reviews: Review[]): (Paragraph | Table)[] {
-  const tableRows: TableRow[] = [
-    new TableRow({
-      children: [
-        new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: '专业', bold: true })] })],
-          width: { size: 25, type: WidthType.PERCENTAGE },
-        }),
-        new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: '意见总数', bold: true })] })],
-          width: { size: 25, type: WidthType.PERCENTAGE },
-        }),
-        new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: '已确认', bold: true })] })],
-          width: { size: 25, type: WidthType.PERCENTAGE },
-        }),
-        new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text: '待确认', bold: true })] })],
-          width: { size: 25, type: WidthType.PERCENTAGE },
-        }),
-      ],
-    }),
-    ...reviews.map(review => {
-      const confirmedItems = review.review_items.filter(i =>
-        i.confirmed || review.confirmed_items.includes(i.id)
-      );
-      const unconfirmedItems = review.review_items.filter(i =>
-        !i.confirmed && !review.confirmed_items.includes(i.id)
-      );
-
-      return new TableRow({
-        children: [
-          new TableCell({
-            children: [new Paragraph(PROFESSION_NAMES[review.profession] || review.profession)],
-            verticalAlign: VerticalAlign.CENTER,
-          }),
-          new TableCell({
-            children: [new Paragraph(String(review.review_items.length))],
-            verticalAlign: VerticalAlign.CENTER,
-          }),
-          new TableCell({
-            children: [new Paragraph(String(confirmedItems.length))],
-            verticalAlign: VerticalAlign.CENTER,
-          }),
-          new TableCell({
-            children: [new Paragraph(String(unconfirmedItems.length))],
-            verticalAlign: VerticalAlign.CENTER,
-          }),
-        ],
-      });
-    }),
-  ];
-
-  return [
-    new Table({
-      rows: tableRows,
-      width: {
-        size: 100,
-        type: WidthType.PERCENTAGE,
-      },
-      borders: {
-        top: { style: BorderStyle.SINGLE, size: 1 },
-        bottom: { style: BorderStyle.SINGLE, size: 1 },
-        left: { style: BorderStyle.SINGLE, size: 1 },
-        right: { style: BorderStyle.SINGLE, size: 1 },
-        insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-        insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-      },
-    }),
-    new Paragraph({ text: '', spacing: { after: 200 } }),
-  ];
 }
