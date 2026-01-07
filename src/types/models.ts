@@ -18,9 +18,9 @@ export interface AIModel {
 export const AI_MODELS: Record<AIModelType, AIModel> = {
   'doubao-seed': {
     id: 'doubao-seed',
-    name: '豆包 Seed',
-    description: '字节跳动开发的高性能大语言模型，适合通用文本生成和对话',
-    modelId: 'doubao-seed-1-6-251015',
+    name: '豆包 Seed Thinking',
+    description: '字节跳动开发的推理增强型大语言模型，具备深度思考能力，适合复杂任务和专业分析',
+    modelId: 'doubao-seed-1-6-thinking-250715',
     provider: '字节跳动',
   },
   'kimi-k2': {
