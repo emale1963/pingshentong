@@ -10,19 +10,29 @@ export async function GET(request: NextRequest) {
   console.log('[API] GET /api/admin/models called');
 
   try {
-    // 检查所有模型健康状态
+    // 检查内置模型的健康状态
     const healthStatuses = await checkAllModelsHealth();
     const configs = modelConfigManager.getAllConfigs();
     const defaultModel = modelConfigManager.getDefaultModel();
 
-    // 合并健康状态和配置
-    const models = healthStatuses.map(health => {
-      const config = configs.find(c => c.modelId === health.modelId);
+    // 合并健康状态和配置，包括所有模型（内置+自定义）
+    const models = configs.map(config => {
+      const health = healthStatuses.find(h => h.modelId === config.modelId);
+
       return {
-        ...health,
-        enabled: config?.enabled ?? true,
-        isDefault: config?.isDefault ?? false,
-        priority: config?.priority ?? 0,
+        modelId: config.modelId,
+        name: config.name,
+        description: config.description,
+        provider: config.provider,
+        available: health?.available ?? false,
+        lastChecked: health?.lastChecked ?? new Date().toISOString(),
+        error: health?.error,
+        errorCode: health?.errorCode,
+        responseTime: health?.responseTime,
+        enabled: config.enabled,
+        isDefault: config.isDefault,
+        priority: config.priority,
+        isCustom: config.isCustom,
       };
     });
 
