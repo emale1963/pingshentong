@@ -64,6 +64,7 @@ export default function ReviewPage() {
   const [selectedModel, setSelectedModel] = useState<string>('kimi-k2');
   const [modelsLoading, setModelsLoading] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, Set<string>>>({});
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     fetchReport();
@@ -97,9 +98,10 @@ export default function ReviewPage() {
         const data = await response.json();
         setReport(data);
 
-        // 自动切换到第一个专业，提升用户体验
-        if (data.reviews && data.reviews.length > 0 && !selectedTab) {
+        // 只在第一次加载时自动切换到第一个专业，避免后续刷新时跳转
+        if (!isInitialized && data.reviews && data.reviews.length > 0 && !selectedTab) {
           setSelectedTab(data.reviews[0].profession);
+          setIsInitialized(true);
         }
 
         // 根据数据库中的confirmed_items初始化勾选状态
