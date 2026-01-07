@@ -69,12 +69,35 @@ export async function POST(request: NextRequest) {
 
     // 测试模型连接
     if (action === 'test') {
-      // 这里应该调用模型健康检查
-      // 简化实现，直接返回成功
-      return NextResponse.json({
-        success: true,
-        message: '模型测试成功',
-      });
+      console.log(`[API] Testing model: ${modelId}`);
+
+      // 调用模型健康检查
+      try {
+        const { checkSingleModelHealth } = await import('@/lib/modelHealthCheck');
+        const healthStatus = await checkSingleModelHealth(modelId);
+
+        console.log(`[API] Model test result:`, healthStatus);
+
+        if (healthStatus.available) {
+          return NextResponse.json({
+            success: true,
+            message: '模型测试成功',
+            healthStatus,
+          });
+        } else {
+          return NextResponse.json({
+            success: false,
+            message: healthStatus.error || '模型测试失败',
+            healthStatus,
+          });
+        }
+      } catch (error) {
+        console.error('[API] Model test error:', error);
+        return NextResponse.json(
+          { error: '模型测试失败: ' + (error instanceof Error ? error.message : '未知错误') },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json(

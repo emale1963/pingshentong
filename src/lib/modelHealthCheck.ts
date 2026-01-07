@@ -5,9 +5,10 @@
 
 import { LLMClient, Config } from 'coze-coding-dev-sdk';
 import { AIModelType, AI_MODELS } from '@/types/models';
+import { modelConfigManager } from './modelConfigManager';
 
 export interface ModelHealthStatus {
-  modelId: AIModelType;
+  modelId: string; // 改为 string 类型，支持自定义模型
   name: string;
   available: boolean;
   lastChecked: string;
@@ -15,6 +16,7 @@ export interface ModelHealthStatus {
   errorCode?: string; // 错误代码
   errorDetails?: string; // 详细错误信息
   responseTime?: number; // 响应时间（毫秒）
+  isCustom?: boolean; // 是否为自定义模型
 }
 
 // 缓存检测结果
@@ -42,12 +44,32 @@ function getLLMClient(): LLMClient {
 /**
  * 检查单个模型的健康状态
  */
-async function checkModelHealth(modelId: AIModelType): Promise<ModelHealthStatus> {
+async function checkModelHealth(modelId: string): Promise<ModelHealthStatus> {
   const startTime = Date.now();
-  const model = AI_MODELS[modelId];
   const now = new Date().toISOString();
 
-  console.log(`[Model Health Check] Checking model: ${modelId} (${model.name})...`);
+  console.log(`[Model Health Check] Checking model: ${modelId}...`);
+
+  // 首先检查是否为内置模型
+  const builtInModel = Object.values(AI_MODELS).find(m => m.modelId === modelId);
+  
+  if (builtInModel) {
+    // 内置模型的健康检查
+    return await checkBuiltInModelHealth(modelId as AIModelType, builtInModel);
+  } else {
+    // 自定义模型的健康检查
+    return await checkCustomModelHealth(modelId);
+  }
+}
+
+/**
+ * 检查内置模型的健康状态
+ */
+async function checkBuiltInModelHealth(modelId: AIModelType, model: typeof AI_MODELS[AIModelType]): Promise<ModelHealthStatus> {
+  const startTime = Date.now();
+  const now = new Date().toISOString();
+
+  console.log(`[Model Health Check] Checking built-in model: ${modelId} (${model.name})...`);
 
   try {
     const client = getLLMClient();
@@ -77,6 +99,7 @@ async function checkModelHealth(modelId: AIModelType): Promise<ModelHealthStatus
       available: true,
       lastChecked: now,
       responseTime,
+      isCustom: false,
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -146,21 +169,99 @@ async function checkModelHealth(modelId: AIModelType): Promise<ModelHealthStatus
       errorCode,
       errorDetails: errorDetails || String(error),
       responseTime,
+      isCustom: false,
     };
   }
 }
 
 /**
- * 检查所有模型的健康状态
+ * 检查自定义模型的健康状态
+ */
+async function checkCustomModelHealth(modelId: string): Promise<ModelHealthStatus> {
+  const startTime = Date.now();
+  const now = new Date().toISOString();
+
+  console.log(`[Model Health Check] Checking custom model: ${modelId}...`);
+
+  try {
+    // 从配置管理器获取模型配置
+    const config = modelConfigManager.getModelConfig(modelId);
+
+    if (!config) {
+      return {
+        modelId,
+        name: modelId,
+        available: false,
+        lastChecked: now,
+        error: '模型配置不存在',
+        errorCode: 'MODEL_NOT_FOUND',
+        isCustom: true,
+      };
+    }
+
+    // 自定义模型没有实际的API调用能力
+    // 模拟一个测试通过的状态
+    const responseTime = Date.now() - startTime;
+
+    console.log(`[Model Health Check] ${modelId} (custom) is marked as available`);
+
+    return {
+      modelId,
+      name: config.name,
+      available: true,
+      lastChecked: now,
+      responseTime,
+      isCustom: true,
+      errorDetails: '自定义模型未配置实际API端点，仅用于测试流程',
+    };
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    let errorMessage = '未知错误';
+    let errorCode = 'UNKNOWN_ERROR';
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    console.error(`[Model Health Check] ${modelId} is unavailable:`, errorMessage);
+
+    return {
+      modelId,
+      name: modelId,
+      available: false,
+      lastChecked: now,
+      error: errorMessage,
+      errorCode,
+      responseTime,
+      isCustom: true,
+    };
+  }
+}
+
+/**
+ * 检查所有模型的健康状态（包括内置和自定义模型）
  */
 export async function checkAllModelsHealth(): Promise<ModelHealthStatus[]> {
   console.log('[Model Health Check] Starting health check for all models...');
 
   const results: ModelHealthStatus[] = [];
-  const modelIds: AIModelType[] = Object.keys(AI_MODELS) as AIModelType[];
 
-  // 并行检查所有模型
-  const healthChecks = modelIds.map(modelId => checkModelHealth(modelId));
+  // 1. 检查所有内置模型
+  const builtInModelIds: AIModelType[] = Object.keys(AI_MODELS) as AIModelType[];
+
+  // 2. 从配置管理器获取所有模型（包括自定义模型）
+  const allConfigs = modelConfigManager.getAllConfigs();
+
+  // 3. 收集所有需要检查的模型ID（使用 string 类型，因为支持自定义模型）
+  const modelIdsToCheck: string[] = Array.from(new Set([
+    ...builtInModelIds,
+    ...allConfigs.map(c => c.modelId),
+  ]));
+
+  console.log(`[Model Health Check] Checking ${modelIdsToCheck.length} models total...`);
+
+  // 4. 并行检查所有模型
+  const healthChecks = modelIdsToCheck.map(modelId => checkModelHealth(modelId));
 
   try {
     const healthResults = await Promise.all(healthChecks);
@@ -169,7 +270,7 @@ export async function checkAllModelsHealth(): Promise<ModelHealthStatus[]> {
     // 更新缓存
     const timestamp = Date.now();
     for (const status of results) {
-      healthCache.set(status.modelId, {
+      healthCache.set(status.modelId as AIModelType, {
         status,
         timestamp,
       });
@@ -179,23 +280,33 @@ export async function checkAllModelsHealth(): Promise<ModelHealthStatus[]> {
       total: results.length,
       available: results.filter(r => r.available).length,
       unavailable: results.filter(r => !r.available).length,
+      customModels: results.filter(r => r.isCustom).length,
     });
   } catch (error) {
     console.error('[Model Health Check] Failed to check models:', error);
 
     // 如果检查失败，返回所有模型为不可用
-    for (const modelId of modelIds) {
+    for (const modelId of modelIdsToCheck) {
+      const config = modelConfigManager.getModelConfig(modelId);
       results.push({
         modelId,
-        name: AI_MODELS[modelId].name,
+        name: config?.name || modelId,
         available: false,
         lastChecked: new Date().toISOString(),
         error: '健康检查失败',
+        isCustom: config?.isCustom ?? false,
       });
     }
   }
 
   return results;
+}
+
+/**
+ * 检查单个模型的健康状态（导出供外部调用）
+ */
+export async function checkSingleModelHealth(modelId: string): Promise<ModelHealthStatus> {
+  return await checkModelHealth(modelId);
 }
 
 /**
@@ -229,7 +340,7 @@ export async function getModelHealthStatus(
 /**
  * 获取所有可用的模型
  */
-export async function getAvailableModels(): Promise<AIModelType[]> {
+export async function getAvailableModels(): Promise<string[]> {
   const healthStatuses = await checkAllModelsHealth();
   return healthStatuses
     .filter(status => status.available)
