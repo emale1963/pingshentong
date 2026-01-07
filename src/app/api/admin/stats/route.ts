@@ -1,46 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import { tempStorage } from '@/lib/tempStorage';
+import { desc, sql, eq, and, gte } from 'drizzle-orm';
+import { db } from '@/lib/db-drizzle';
+import { users, reports, modelUsageStats, systemLogs } from '@/storage/database/shared/schema';
 
 export async function GET(request: NextRequest) {
   try {
-    // 尝试从数据库获取统计数据
-    const client = await pool.connect();
-
     // 获取各种统计数据
-    const [reportsResult, usersResult, completedResult, reviewingResult, failedResult, reviewsResult] = await Promise.all([
-      client.query('SELECT COUNT(*) as count FROM reports'),
-      client.query('SELECT COUNT(*) as count FROM users'),
-      client.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['completed']),
-      client.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['reviewing']),
-      client.query('SELECT COUNT(*) as count FROM reports WHERE status = $1', ['failed']),
-      client.query('SELECT COUNT(*) as count FROM reviews'),
+    const [totalReportsResult, totalUsersResult, completedReportsResult, modelUsageResult] = await Promise.all([
+      // 总报告数
+      db.select({ count: sql<number>`count(*)` }).from(reports),
+      // 用户总数
+      db.select({ count: sql<number>`count(*)` }).from(users),
+      // 已完成的报告数（作为评审数）
+      db.select({ count: sql<number>`count(*)` }).from(reports).where(eq(reports.status, 'completed')),
+      // 模型使用情况（按模型ID汇总）
+      db.select({
+        modelId: modelUsageStats.modelId,
+        modelName: modelUsageStats.modelName,
+        count: sql<number>`sum(${modelUsageStats.callCount})`.mapWith(Number),
+      })
+      .from(modelUsageStats)
+      .groupBy(modelUsageStats.modelId, modelUsageStats.modelName)
+      .orderBy(desc(sql`sum(${modelUsageStats.callCount})`)),
     ]);
 
-    client.release();
+    // 计算活跃用户（最近7天登录的用户）
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const activeUsersResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(gte(users.lastLoginAt, sevenDaysAgo.toISOString()));
 
     const stats = {
-      totalReports: parseInt(reportsResult.rows[0].count),
-      totalUsers: parseInt(usersResult.rows[0].count),
-      completedReports: parseInt(completedResult.rows[0].count),
-      reviewingReports: parseInt(reviewingResult.rows[0].count),
-      failedReports: parseInt(failedResult.rows[0].count),
-      totalReviews: parseInt(reviewsResult.rows[0].count),
+      totalReports: totalReportsResult[0]?.count || 0,
+      totalReviews: completedReportsResult[0]?.count || 0,
+      totalUsers: totalUsersResult[0]?.count || 0,
+      activeUsers: activeUsersResult[0]?.count || 0,
+      modelUsage: modelUsageResult.map((item) => ({
+        modelId: item.modelId || item.modelName || 'unknown',
+        count: item.count || 0,
+      })),
     };
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('Failed to fetch stats from database, using temp storage:', error);
+    console.error('Failed to fetch stats from database:', error);
 
-    // 降级方案:从临时存储获取统计数据
-    const reports = tempStorage.getAllReports();
+    // 降级方案：返回空数据
     const stats = {
-      totalReports: reports.length,
-      totalUsers: 1, // 暂时硬编码
-      completedReports: reports.filter(r => r.status === 'completed').length,
-      reviewingReports: reports.filter(r => r.status === 'reviewing').length,
-      failedReports: reports.filter(r => r.status === 'failed').length,
-      totalReviews: reports.reduce((sum, r) => sum + (r.reviews?.length || 0), 0),
+      totalReports: 0,
+      totalReviews: 0,
+      totalUsers: 0,
+      activeUsers: 0,
+      modelUsage: [],
     };
 
     return NextResponse.json(stats);
