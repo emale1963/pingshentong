@@ -94,9 +94,9 @@ export default function AdminLogin() {
             type="submit"
             disabled={loading}
             className="w-full py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:opacity-90"
-            style={{ backgroundColor: 'var(--color-brand-primary)', color: 'var(--color-text-inverse)' }}
+            style={{ backgroundColor: 'var(--color-brand-primary)', color: 'var(--color-text-inverse)', whiteSpace: 'pre' }}
           >
-            {loading ? '登录中...' : '登&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;录'}
+            {loading ? '登录中...' : '登            录'}
           </button>
         </form>
       </div>
