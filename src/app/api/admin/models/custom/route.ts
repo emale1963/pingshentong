@@ -9,11 +9,19 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { modelId, name, description, provider } = body;
+    const { modelId, name, description, provider, apiConfig } = body;
 
     if (!modelId || !name) {
       return NextResponse.json(
         { error: '模型ID和名称不能为空' },
+        { status: 400 }
+      );
+    }
+
+    // 验证 API 配置（如果提供）
+    if (apiConfig && !apiConfig.endpoint) {
+      return NextResponse.json(
+        { error: 'API 配置中必须提供端点地址 (endpoint)' },
         { status: 400 }
       );
     }
@@ -28,12 +36,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 添加自定义模型
+    // 添加自定义模型，包含 API 配置
     const newConfig = modelConfigManager.addCustomModel(
       modelId,
       name,
       description || '',
-      provider || '自定义'
+      provider || '自定义',
+      apiConfig
     );
 
     console.log('[API] Custom model added, all configs:', modelConfigManager.getAllConfigs());

@@ -50,9 +50,9 @@ async function checkModelHealth(modelId: string): Promise<ModelHealthStatus> {
 
   console.log(`[Model Health Check] Checking model: ${modelId}...`);
 
-  // 首先检查是否为内置模型
-  const builtInModel = Object.values(AI_MODELS).find(m => m.modelId === modelId);
-  
+  // 首先检查是否为内置模型（检查 modelId 或 id 字段）
+  const builtInModel = Object.values(AI_MODELS).find(m => m.modelId === modelId || m.id === modelId);
+
   if (builtInModel) {
     // 内置模型的健康检查
     return await checkBuiltInModelHealth(modelId as AIModelType, builtInModel);
@@ -199,21 +199,136 @@ async function checkCustomModelHealth(modelId: string): Promise<ModelHealthStatu
       };
     }
 
-    // 自定义模型没有实际的API调用能力
-    // 模拟一个测试通过的状态
-    const responseTime = Date.now() - startTime;
+    // 检查是否配置了 API 端点
+    if (!config.apiConfig || !config.apiConfig.endpoint) {
+      return {
+        modelId,
+        name: config.name,
+        available: false,
+        lastChecked: now,
+        error: '未配置 API 端点',
+        errorCode: 'NO_API_ENDPOINT',
+        responseTime: Date.now() - startTime,
+        isCustom: true,
+      };
+    }
 
-    console.log(`[Model Health Check] ${modelId} (custom) is marked as available`);
+    // 尝试调用外部 API 进行健康检查
+    try {
+      const { endpoint, apiKey, apiVersion, model: actualModel } = config.apiConfig;
 
-    return {
-      modelId,
-      name: config.name,
-      available: true,
-      lastChecked: now,
-      responseTime,
-      isCustom: true,
-      errorDetails: '自定义模型未配置实际API端点，仅用于测试流程',
-    };
+      // 构建测试请求
+      const testRequest = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey && { 'Authorization': `Bearer ${apiKey}` }),
+          ...(apiVersion && { 'API-Version': apiVersion }),
+        },
+        body: JSON.stringify({
+          model: actualModel || modelId,
+          messages: [{ role: 'user', content: 'test' }],
+          max_tokens: 10,
+        }),
+      });
+
+      const responseTime = Date.now() - startTime;
+
+      if (!testRequest.ok) {
+        const errorText = await testRequest.text();
+        let errorMessage = 'API 调用失败';
+        let errorCode = 'API_ERROR';
+
+        // 根据状态码判断错误类型
+        if (testRequest.status === 401) {
+          errorMessage = 'API 密钥无效或已过期';
+          errorCode = 'AUTH_ERROR';
+        } else if (testRequest.status === 404) {
+          errorMessage = 'API 端点不存在或模型 ID 错误';
+          errorCode = 'MODEL_NOT_FOUND';
+        } else if (testRequest.status === 429) {
+          errorMessage = 'API 调用频率超限';
+          errorCode = 'RATE_LIMIT';
+        } else if (testRequest.status >= 500) {
+          errorMessage = 'API 服务器错误';
+          errorCode = 'SERVER_ERROR';
+        }
+
+        console.error(`[Model Health Check] ${modelId} API call failed:`, {
+          status: testRequest.status,
+          error: errorText,
+        });
+
+        return {
+          modelId,
+          name: config.name,
+          available: false,
+          lastChecked: now,
+          error: errorMessage,
+          errorCode,
+          errorDetails: errorText,
+          responseTime,
+          isCustom: true,
+        };
+      }
+
+      const responseData = await testRequest.json();
+
+      // 检查返回数据格式是否正确
+      if (!responseData || typeof responseData !== 'object') {
+        return {
+          modelId,
+          name: config.name,
+          available: false,
+          lastChecked: now,
+          error: 'API 返回数据格式错误',
+          errorCode: 'INVALID_RESPONSE',
+          responseTime,
+          isCustom: true,
+        };
+      }
+
+      console.log(`[Model Health Check] ${modelId} (custom) is available, response time: ${responseTime}ms`);
+
+      return {
+        modelId,
+        name: config.name,
+        available: true,
+        lastChecked: now,
+        responseTime,
+        isCustom: true,
+      };
+    } catch (fetchError) {
+      const responseTime = Date.now() - startTime;
+      let errorMessage = 'API 调用失败';
+      let errorCode = 'API_ERROR';
+
+      if (fetchError instanceof Error) {
+        errorMessage = fetchError.message;
+
+        // 网络相关错误
+        if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('ENOTFOUND')) {
+          errorMessage = '无法连接到 API 端点';
+          errorCode = 'NETWORK_ERROR';
+        } else if (errorMessage.includes('timeout') || errorMessage.includes('超时')) {
+          errorMessage = 'API 响应超时';
+          errorCode = 'TIMEOUT_ERROR';
+        }
+      }
+
+      console.error(`[Model Health Check] ${modelId} API call error:`, errorMessage);
+
+      return {
+        modelId,
+        name: config.name,
+        available: false,
+        lastChecked: now,
+        error: errorMessage,
+        errorCode,
+        responseTime,
+        isCustom: true,
+      };
+    }
   } catch (error) {
     const responseTime = Date.now() - startTime;
     let errorMessage = '未知错误';

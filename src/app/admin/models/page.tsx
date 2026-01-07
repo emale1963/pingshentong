@@ -30,6 +30,12 @@ export default function ModelsPage() {
     name: '',
     description: '',
     provider: '自定义',
+    apiConfig: {
+      endpoint: '',
+      apiKey: '',
+      apiVersion: '',
+      model: '',
+    },
   });
 
   useEffect(() => {
@@ -177,13 +183,30 @@ export default function ModelsPage() {
 
     try {
       setUpdating(true);
+
+      // 构建请求体，只包含非空的 API 配置字段
+      const requestBody = {
+        modelId: newModel.modelId,
+        name: newModel.name,
+        description: newModel.description,
+        provider: newModel.provider,
+        ...(newModel.apiConfig.endpoint && {
+          apiConfig: {
+            endpoint: newModel.apiConfig.endpoint,
+            ...(newModel.apiConfig.apiKey && { apiKey: newModel.apiConfig.apiKey }),
+            ...(newModel.apiConfig.apiVersion && { apiVersion: newModel.apiConfig.apiVersion }),
+            ...(newModel.apiConfig.model && { model: newModel.apiConfig.model }),
+          }
+        }),
+      };
+
       const response = await fetch('/api/admin/models/custom', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newModel),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -194,6 +217,12 @@ export default function ModelsPage() {
           name: '',
           description: '',
           provider: '自定义',
+          apiConfig: {
+            endpoint: '',
+            apiKey: '',
+            apiVersion: '',
+            model: '',
+          },
         });
         fetchModels();
       } else {
@@ -439,6 +468,81 @@ export default function ModelsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="例如: OpenAI"
                   />
+                </div>
+
+                {/* API 配置 */}
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">API 配置（可选）</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="endpoint" className="block text-sm font-medium text-gray-700 mb-1">
+                        API 端点 *
+                      </label>
+                      <input
+                        id="endpoint"
+                        type="url"
+                        value={newModel.apiConfig.endpoint}
+                        onChange={(e) => setNewModel({
+                          ...newModel,
+                          apiConfig: { ...newModel.apiConfig, endpoint: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="例如: https://api.openai.com/v1/chat/completions"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">填写完整 URL（可选，用于健康检查）</p>
+                    </div>
+                    <div>
+                      <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-1">
+                        API 密钥
+                      </label>
+                      <input
+                        id="apiKey"
+                        type="password"
+                        value={newModel.apiConfig.apiKey}
+                        onChange={(e) => setNewModel({
+                          ...newModel,
+                          apiConfig: { ...newModel.apiConfig, apiKey: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="例如: sk-xxx..."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">用于 API 认证（可选）</p>
+                    </div>
+                    <div>
+                      <label htmlFor="apiVersion" className="block text-sm font-medium text-gray-700 mb-1">
+                        API 版本
+                      </label>
+                      <input
+                        id="apiVersion"
+                        type="text"
+                        value={newModel.apiConfig.apiVersion}
+                        onChange={(e) => setNewModel({
+                          ...newModel,
+                          apiConfig: { ...newModel.apiConfig, apiVersion: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="例如: 2023-05-15"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">部分 API 需要指定版本（可选）</p>
+                    </div>
+                    <div>
+                      <label htmlFor="actualModel" className="block text-sm font-medium text-gray-700 mb-1">
+                        实际模型名称
+                      </label>
+                      <input
+                        id="actualModel"
+                        type="text"
+                        value={newModel.apiConfig.model}
+                        onChange={(e) => setNewModel({
+                          ...newModel,
+                          apiConfig: { ...newModel.apiConfig, model: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="例如: gpt-4-turbo-preview"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">API 调用时使用的模型参数（可选）</p>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-6">
                   <button
