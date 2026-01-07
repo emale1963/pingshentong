@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function AdminLogin() {
   const router = useRouter();
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('123456');
+  const [password, setPassword] = useState('1111');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [debugInfo, setDebugInfo] = useState('');
@@ -147,10 +147,10 @@ export default function AdminLogin() {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500 space-y-2">
-          <p>默认账号：admin / 密码：123456</p>
+          <p>默认账号：admin / 密码：1111</p>
           <p className="mt-1">首次登录后请修改密码</p>
           <p className="mt-2 text-xs text-blue-600">
-            如果登录失败，请勾选"使用简化API"后重试
+            如果登录失败，请先 <a href="/admin/init" className="hover:underline">初始化管理员账号</a>
           </p>
           <div className="mt-4 pt-4 border-t">
             <p className="text-xs text-gray-400 mb-2">调试工具：</p>

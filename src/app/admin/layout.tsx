@@ -4,14 +4,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/Logo';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import AdminGuard from '@/components/AdminGuard';
 
-export default function AdminLayout({
+function AdminLayoutContent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   // 如果是登录页面，直接显示内容
   if (pathname.includes('/login')) {
@@ -156,7 +159,9 @@ export default function AdminLayout({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <main className="p-6 pt-40 lg:pt-20">{children}</main>
+          <main className="p-6 pt-40 lg:pt-20">
+            <AdminGuard>{children}</AdminGuard>
+          </main>
         </div>
       </div>
 
@@ -168,5 +173,17 @@ export default function AdminLayout({
         />
       )}
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AuthProvider>
   );
 }

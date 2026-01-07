@@ -82,7 +82,7 @@ export class UserManager {
       return existingAdmin;
     }
 
-    const passwordHash = await bcrypt.hash('111111', 10);
+    const passwordHash = await bcrypt.hash('1111', 10);
     const admin = await this.createUser({
       username: 'admin',
       email: 'admin@example.com',
