@@ -11,6 +11,7 @@ export interface AuthContextType {
   user: AdminUser | null;
   loading: boolean;
   checkAuth: () => Promise<void>;
+  login: (user: AdminUser) => void;
   logout: () => Promise<void>;
 }
 
@@ -36,6 +37,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const login = (user: AdminUser) => {
+    setUser(user);
+  };
+
   const logout = async () => {
     try {
       await fetch('/api/admin/simple-auth/logout', { method: 'POST' });
@@ -52,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, checkAuth, logout }}>
+    <AuthContext.Provider value={{ user, loading, checkAuth, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
