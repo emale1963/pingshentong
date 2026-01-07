@@ -25,6 +25,14 @@ export default function ModelsPage() {
   const [testing, setTesting] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configModel, setConfigModel] = useState<string>('');
+  const [apiConfig, setApiConfig] = useState({
+    endpoint: '',
+    apiKey: '',
+    apiVersion: '',
+    model: '',
+  });
   const [newModel, setNewModel] = useState({
     modelId: '',
     name: '',
@@ -168,6 +176,79 @@ export default function ModelsPage() {
     } catch (error) {
       console.error('Delete custom model error:', error);
       alert('删除失败');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleConfigAPI = (modelId: string) => {
+    const model = models.find(m => m.modelId === modelId);
+    if (!model) return;
+
+    setConfigModel(modelId);
+
+    // 从当前模型配置中获取 API 配置
+    const currentConfig = model as any;
+    setApiConfig({
+      endpoint: currentConfig.apiConfig?.endpoint || '',
+      apiKey: currentConfig.apiConfig?.apiKey || '',
+      apiVersion: currentConfig.apiConfig?.apiVersion || '',
+      model: currentConfig.apiConfig?.model || '',
+    });
+
+    setShowConfigModal(true);
+  };
+
+  const handleUpdateAPIConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!configModel) {
+      alert('模型ID不能为空');
+      return;
+    }
+
+    if (!apiConfig.endpoint) {
+      alert('API端点不能为空');
+      return;
+    }
+
+    try {
+      setUpdating(true);
+
+      // 构建请求体
+      const requestBody = {
+        modelId: configModel,
+        apiConfig: {
+          endpoint: apiConfig.endpoint,
+          ...(apiConfig.apiKey && { apiKey: apiConfig.apiKey }),
+          ...(apiConfig.apiVersion && { apiVersion: apiConfig.apiVersion }),
+          ...(apiConfig.model && { model: apiConfig.model }),
+        }
+      };
+
+      const response = await fetch('/api/admin/models/config', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...requestBody,
+          action: 'updateAPIConfig'
+        }),
+      });
+
+      if (response.ok) {
+        alert('API配置更新成功');
+        setShowConfigModal(false);
+        fetchModels();
+      } else {
+        const data = await response.json();
+        alert('更新失败: ' + (data.error || '未知错误'));
+      }
+    } catch (error) {
+      console.error('Update API config error:', error);
+      alert('更新失败');
     } finally {
       setUpdating(false);
     }
@@ -393,6 +474,15 @@ export default function ModelsPage() {
                     )}
                     {model.isCustom && (
                       <button
+                        onClick={() => handleConfigAPI(model.modelId)}
+                        disabled={updating}
+                        className="text-purple-600 hover:text-purple-900"
+                      >
+                        配置API
+                      </button>
+                    )}
+                    {model.isCustom && (
+                      <button
                         onClick={() => handleDeleteCustomModel(model.modelId)}
                         disabled={updating}
                         className="text-red-600 hover:text-red-900"
@@ -558,6 +648,95 @@ export default function ModelsPage() {
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                   >
                     添加
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 配置API弹窗 */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">配置API</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                为模型 <span className="font-medium text-gray-900">{configModel}</span> 配置API
+              </p>
+              <form onSubmit={handleUpdateAPIConfig} className="space-y-4">
+                <div>
+                  <label htmlFor="config-endpoint" className="block text-sm font-medium text-gray-700 mb-1">
+                    API 端点 *
+                  </label>
+                  <input
+                    id="config-endpoint"
+                    type="url"
+                    value={apiConfig.endpoint}
+                    onChange={(e) => setApiConfig({ ...apiConfig, endpoint: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="例如: https://api.openai.com/v1/chat/completions"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">填写完整 URL</p>
+                </div>
+                <div>
+                  <label htmlFor="config-apiKey" className="block text-sm font-medium text-gray-700 mb-1">
+                    API 密钥
+                  </label>
+                  <input
+                    id="config-apiKey"
+                    type="password"
+                    value={apiConfig.apiKey}
+                    onChange={(e) => setApiConfig({ ...apiConfig, apiKey: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="例如: sk-xxx..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">用于 API 认证（可选）</p>
+                </div>
+                <div>
+                  <label htmlFor="config-apiVersion" className="block text-sm font-medium text-gray-700 mb-1">
+                    API 版本
+                  </label>
+                  <input
+                    id="config-apiVersion"
+                    type="text"
+                    value={apiConfig.apiVersion}
+                    onChange={(e) => setApiConfig({ ...apiConfig, apiVersion: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="例如: 2023-05-15"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">部分 API 需要指定版本（可选）</p>
+                </div>
+                <div>
+                  <label htmlFor="config-model" className="block text-sm font-medium text-gray-700 mb-1">
+                    实际模型名称
+                  </label>
+                  <input
+                    id="config-model"
+                    type="text"
+                    value={apiConfig.model}
+                    onChange={(e) => setApiConfig({ ...apiConfig, model: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="例如: gpt-4-turbo-preview"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">API 调用时使用的模型参数（可选）</p>
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfigModal(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updating}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                  >
+                    保存配置
                   </button>
                 </div>
               </form>

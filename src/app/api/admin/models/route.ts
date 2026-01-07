@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         isDefault: config.isDefault,
         priority: config.priority,
         isCustom: config.isCustom,
+        apiConfig: config.apiConfig, // 包含API配置
       };
     });
 
