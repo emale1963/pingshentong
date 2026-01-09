@@ -198,6 +198,114 @@ src/
 - 提供签名URL下载
 - 24小时有效期
 
+---
+
+## 部署指南
+
+### 快速部署
+
+系统提供两种部署方式：
+
+#### 1. Docker 部署（推荐）
+
+最简单快捷的部署方式，适合生产环境。
+
+```bash
+# 复制环境配置文件
+cp .env.production.example .env.production
+nano .env.production  # 配置环境变量
+
+# 使用 Docker Compose 部署
+chmod +x scripts/docker-deploy.sh
+./scripts/docker-deploy.sh init
+```
+
+详细文档：[Docker 部署指南](QUICK_START.md#方案一docker-部署推荐最简单)
+
+#### 2. 直接部署
+
+适用于测试环境或需要精细控制的服务器。
+
+```bash
+# 使用自动化脚本部署
+sudo chmod +x scripts/deploy.sh
+sudo ./scripts/deploy.sh init
+```
+
+详细文档：[直接部署指南](QUICK_START.md#方案二直接部署推荐用于测试环境)
+
+### 完整部署文档
+
+- 📖 **[快速开始指南](QUICK_START.md)** - 5-10分钟快速部署
+- 📘 **[完整部署文档](DEPLOYMENT.md)** - 详细的部署和运维指南
+- 📗 **[系统管理文档](docs/ADMIN_SYSTEM.md)** - 管理后台使用指南
+
+### 部署方案对比
+
+| 特性 | Docker 部署 | 直接部署 |
+|------|------------|---------|
+| 难度 | ⭐ 简单 | ⭐⭐ 中等 |
+| 环境隔离 | ✅ 完全隔离 | ❌ 需手动配置 |
+| 迁移便捷性 | ✅ 高 | ❌ 低 |
+| 资源占用 | ⭐⭐⭐ 较高 | ⭐⭐ 较低 |
+| 适用场景 | 生产环境 | 测试/开发环境 |
+
+---
+
+## 故障排查
+
+### 常见问题
+
+1. **服务无法启动**
+   ```bash
+   # 查看 PM2 日志
+   pm2 logs ai-review-system
+
+   # Docker 查看日志
+   docker compose logs -f
+   ```
+
+2. **数据库连接失败**
+   - 检查 PostgreSQL 服务状态
+   - 验证数据库配置是否正确
+   - 检查防火墙设置
+
+3. **AI 评审失败**
+   - 确认 AI API 密钥配置正确
+   - 检查网络连接
+   - 查看后端日志
+
+详细故障排查：[DEPLOYMENT.md](DEPLOYMENT.md#故障排查)
+
+---
+
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+### 开发流程
+
+1. Fork 本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 许可证
+
+本项目采用 MIT 许可证。
+
+---
+
+## 联系方式
+
+如有问题或建议，请通过以下方式联系：
+
+- 提交 [Issue](https://github.com/your-repo/issues)
+- 发送邮件至 support@example.com
+
 ## AI评审说明
 
 ### 评审专业
