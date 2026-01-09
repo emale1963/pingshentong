@@ -158,7 +158,7 @@ ${standardsReference}
     try {
       console.log(`[AI Review] Starting ${profession} profession analysis with model: ${model.name}...`);
       console.log(`[AI Review] Report summary length: ${reportSummary.length} characters`);
-      
+
       // 设置超时时间（60秒）
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('AI评审超时')), 60000);
@@ -220,7 +220,14 @@ ${standardsReference}
 
       // 如果AI失败，返回基于专业知识的默认评审结果
       console.log(`[AI Review] ${profession}: Using knowledge-based fallback review`);
-      return this.generateKnowledgeBasedReview(profession, errorMessage);
+
+      try {
+        return await this.generateKnowledgeBasedReview(profession, errorMessage);
+      } catch (fallbackError) {
+        console.error(`[AI Review] ${profession}: Fallback review also failed, using hardcoded fallback`);
+        // 如果降级评审也失败，使用硬编码的降级评审要点
+        return this.generateHardcodedFallbackReview(profession, errorMessage);
+      }
     }
   }
 
@@ -230,11 +237,11 @@ ${standardsReference}
     modelType: AIModelType = DEFAULT_MODEL
   ): Promise<ReviewResult[]> {
     console.log(`[AI Review] Starting analysis for ${professions.length} professions with model: ${modelType}...`);
-    
+
     const results: ReviewResult[] = [];
-    
+
     // 并行分析各个专业
-    const promises = professions.map(profession => 
+    const promises = professions.map(profession =>
       this.analyzeProfession(profession, reportSummary, modelType)
     );
 
@@ -251,6 +258,17 @@ ${standardsReference}
           results.push(result);
         } catch (err) {
           console.error(`[AI Review] Failed to analyze ${profession}:`, err);
+          // 即使AI分析失败，也要使用硬编码的降级评审要点，确保每个专业都有评审结果
+          try {
+            const fallbackResult = this.generateHardcodedFallbackReview(
+              profession,
+              err instanceof Error ? err.message : String(err)
+            );
+            results.push(fallbackResult);
+            console.log(`[AI Review] ${profession}: Added hardcoded fallback review`);
+          } catch (fallbackErr) {
+            console.error(`[AI Review] ${profession}: Hardcoded fallback also failed`, fallbackErr);
+          }
         }
       }
     }
@@ -393,7 +411,7 @@ ${standardsReference}
         ]
       },
       plumbing: {
-        analysis: '给排水专业评审：根据建筑功能和用水需求，对给排水系统设计进行常规性审查。以下评审内容基于建筑给水排水设计规范生成。',
+        analysis: '给排水专业评审：根据建筑功能和用水需求，对给排水系统设计进行常规性审查。由于AI自动分析暂时不可用，以下评审内容基于建筑给水排水设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '给水系统设计是否合理，水压和水量是否满足使用要求',
@@ -408,7 +426,7 @@ ${standardsReference}
         ]
       },
       electrical: {
-        analysis: '电气专业评审：对供配电系统、照明系统等进行常规性审查。',
+        analysis: '电气专业评审：对供配电系统、照明系统等进行常规性审查。由于AI自动分析暂时不可用，以下评审内容基于电气设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '供电系统是否可靠，负荷计算是否准确',
@@ -423,7 +441,7 @@ ${standardsReference}
         ]
       },
       hvac: {
-        analysis: '暖通专业评审：对采暖通风空调系统进行常规性审查。',
+        analysis: '暖通专业评审：对采暖通风空调系统进行常规性审查。由于AI自动分析暂时不可用，以下评审内容基于暖通空调设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '空调系统选型是否合理，是否满足节能要求',
@@ -433,7 +451,7 @@ ${standardsReference}
         ]
       },
       fire: {
-        analysis: '消防专业评审：对消防设施和防火设计进行重点审查。',
+        analysis: '消防专业评审：对消防设施和防火设计进行重点审查。由于AI自动分析暂时不可用，以下评审内容基于消防设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '消防设施配置是否齐全，是否满足防火要求',
@@ -443,7 +461,7 @@ ${standardsReference}
         ]
       },
       road: {
-        analysis: '道路专业评审：对道路设计和交通组织进行审查。',
+        analysis: '道路专业评审：对道路设计和交通组织进行审查。由于AI自动分析暂时不可用，以下评审内容基于道路工程设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '道路设计是否满足交通需求，线形是否合理',
@@ -453,7 +471,7 @@ ${standardsReference}
         ]
       },
       landscape: {
-        analysis: '景观专业评审：对景观设计和绿化配置进行审查。',
+        analysis: '景观专业评审：对景观设计和绿化配置进行审查。由于AI自动分析暂时不可用，以下评审内容基于景观设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '景观设计是否与建筑风格协调，绿化配置是否合理',
@@ -463,7 +481,7 @@ ${standardsReference}
         ]
       },
       interior: {
-        analysis: '室内专业评审：对室内设计和装修方案进行审查。',
+        analysis: '室内专业评审：对室内设计和装修方案进行审查。由于AI自动分析暂时不可用，以下评审内容基于室内设计规范生成，建议结合实际设计图纸进行详细复核。',
         items: [
           {
             desc: '室内设计是否满足功能需求，装修材料是否符合环保要求',
