@@ -183,7 +183,7 @@ upstream ai_review_backend {
 
 server {
     listen 80;
-    server_name your-domain.com;  # 替换为你的域名或服务器IP
+    server_name 14.103.72.48;  # 替换为你的域名或服务器IP
 
     client_max_body_size 100M;
 
@@ -217,7 +217,7 @@ sudo systemctl reload nginx
 # 安装 Certbot
 sudo apt-get install -y certbot python3-certbot-nginx
 
-# 自动配置 HTTPS
+# 自动配置 HTTPS（如果有域名）
 sudo certbot --nginx -d your-domain.com
 
 # 自动续期

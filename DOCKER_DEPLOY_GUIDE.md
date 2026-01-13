@@ -74,8 +74,8 @@ JWT_SECRET=your_very_long_random_jwt_secret_key_minimum_32_characters
 SESSION_SECRET=another_random_session_secret_key
 COOKIE_SECRET=another_random_cookie_secret_key
 
-# 4. 应用 URL（替换为你的域名或服务器IP）
-APP_URL=https://your-domain.com
+# 4. 应用 URL（替换为你的服务器IP）
+APP_URL=http://14.103.72.48
 ```
 
 ### 可选修改的配置项
@@ -197,8 +197,8 @@ docker compose logs -f nginx
 
 打开浏览器访问：
 
-- **主页**: `http://your-server-ip` 或 `http://your-domain.com`
-- **管理后台**: `http://your-server-ip/admin`
+- **主页**: `http://14.103.72.48`
+- **管理后台**: `http://14.103.72.48/admin`
 
 ### 4. 检查数据库
 
@@ -409,17 +409,19 @@ docker system prune -a
 
 ---
 
-## 配置 HTTPS（推荐）
+## 配置 HTTPS（可选）
 
-如果你有域名和 SSL 证书：
+如果你有域名和 SSL 证书，可以配置 HTTPS。如果你使用 IP 地址访问（如 14.103.72.48），Let's Encrypt 不支持 IP 证书，可以使用自签名证书（浏览器会有安全警告，但可以使用）。
 
-### 使用 Let's Encrypt 免费证书
+### 方案 A: 使用域名和 Let's Encrypt 免费证书（推荐）
+
+如果你有域名并已解析到服务器：
 
 ```bash
 # 安装 Certbot
 sudo apt-get install -y certbot
 
-# 获取证书
+# 获取证书（替换为你的实际域名）
 sudo certbot certonly --standalone -d your-domain.com
 
 # 证书会保存在 /etc/letsencrypt/live/your-domain.com/
@@ -434,7 +436,30 @@ nano nginx/conf.d/default.conf
 docker compose restart nginx
 ```
 
-### 自动续期
+### 方案 B: 使用自签名证书（仅用于 IP 访问）
+
+如果你使用 IP 地址访问，生成自签名证书：
+
+```bash
+# 创建 SSL 目录
+mkdir -p nginx/ssl
+
+# 生成自签名证书（有效期 365 天）
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout nginx/ssl/privkey.pem \
+  -out nginx/ssl/fullchain.pem \
+  -subj "/CN=14.103.72.48"
+
+# 修改 nginx/conf.d/default.conf，取消 HTTPS 配置的注释
+nano nginx/conf.d/default.conf
+
+# 重启 Nginx
+docker compose restart nginx
+```
+
+**注意**：自签名证书会在浏览器显示安全警告，点击"继续访问"即可。仅用于开发和测试环境。
+
+### Let's Encrypt 证书自动续期
 
 ```bash
 # 测试续期
