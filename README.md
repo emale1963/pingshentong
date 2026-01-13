@@ -200,6 +200,99 @@ src/
 
 ---
 
+## 🚀 云服务器部署
+
+### 快速自动部署（推荐）
+
+**5分钟完成部署，支持代码推送后自动更新！**
+
+请查看：[快速自动部署指南](QUICK_AUTO_DEPLOY.md)
+
+### 方案一：GitHub Actions 自动部署
+
+1. **服务器初始化**（1分钟）
+   ```bash
+   ssh root@14.103.72.48
+   curl -o server-init.sh https://raw.githubusercontent.com/emale1963/pingshentong/main/scripts/server-init.sh
+   chmod +x server-init.sh
+   ./server-init.sh
+   ```
+
+2. **配置 GitHub Secrets**（2分钟）
+   - 生成 SSH 密钥：`ssh-keygen -t ed25519 -C "github-actions-deploy"`
+   - 添加公钥到服务器：`ssh-copy-id -i ~/.ssh/github_actions_deploy.pub root@14.103.72.48`
+   - 在 GitHub 仓库配置 Secrets：
+     - `SERVER_HOST` = `14.103.72.48`
+     - `SERVER_USER` = `root`
+     - `SSH_PRIVATE_KEY` = 私钥内容
+
+3. **配置环境变量**（1分钟）
+   ```bash
+   cd /opt/ai-review-system
+   nano .env.production
+   # 修改必须的配置：DB_PASSWORD, AI_API_KEY, AI_API_URL, JWT_SECRET, etc.
+   cp .env.production .env
+   ```
+
+4. **首次部署**（1分钟）
+   ```bash
+   ./scripts/server-deploy.sh
+   ```
+
+完成！访问 http://14.103.72.48
+
+**自动部署：** 修改代码推送到 GitHub 后，系统会自动部署到服务器。
+
+### 方案二：手动部署
+
+```bash
+# 1. SSH 连接到服务器
+ssh root@14.103.72.48
+
+# 2. 克隆代码
+git clone https://github.com/emale1963/pingshentong.git /opt/ai-review-system
+cd /opt/ai-review-system
+
+# 3. 配置环境变量
+cp .env.production.example .env.production
+nano .env.production
+cp .env.production .env
+
+# 4. 执行快速部署
+./scripts/quick-deploy.sh
+```
+
+### 部署文档
+
+- [🚀 快速自动部署指南](QUICK_AUTO_DEPLOY.md) - 5分钟快速开始
+- [📖 完整自动部署指南](AUTO_DEPLOY_GUIDE.md) - 详细配置和故障排查
+- [🐳 Docker 部署指南](DOCKER_DEPLOY_GUIDE.md) - Docker 容器化部署
+- [✅ 部署检查清单](CHECKLIST.md) - 部署前检查项
+
+### 服务器信息
+
+- **服务器IP**: 14.103.72.48
+- **访问地址**: http://14.103.72.48
+- **管理后台**: http://14.103.72.48/admin
+
+### 常用命令
+
+```bash
+# 查看服务状态
+cd /opt/ai-review-system && docker compose ps
+
+# 查看日志
+docker compose logs -f
+
+# 重启服务
+docker compose restart
+
+# 更新并部署
+git pull && ./scripts/server-deploy.sh
+```
+
+---
+
 ## 部署指南
 
 ### 快速部署

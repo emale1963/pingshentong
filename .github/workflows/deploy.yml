@@ -1,0 +1,124 @@
+name: Auto Deploy to Cloud Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install
+
+      - name: Build application
+        run: |
+          pnpm build
+        env:
+          NODE_ENV: production
+
+      - name: Create deployment package
+        run: |
+          tar -czf deploy-package.tar.gz \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=scripts \
+            --exclude=*.md \
+            --exclude=docs \
+            --exclude=DEPLOYMENT.md \
+            --exclude=DOCKER_DEPLOY_GUIDE.md \
+            --exclude=QUICK_START.md \
+            --exclude=CHECKLIST.md \
+            .
+
+      - name: Upload package to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "deploy-package.tar.gz"
+          target: "/tmp"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            # 停止现有服务
+            cd /opt/ai-review-system || mkdir -p /opt/ai-review-system
+            if [ -f docker-compose.yml ]; then
+              docker compose down 2>/dev/null || true
+            fi
+
+            # 备份旧版本
+            if [ -d "old" ]; then
+              rm -rf "old"
+            fi
+            mkdir -p old
+            cp -r * old/ 2>/dev/null || true
+
+            # 解压新版本
+            tar -xzf /tmp/deploy-package.tar.gz -C /opt/ai-review-system
+            cd /opt/ai-review-system
+
+            # 确保 .env 文件存在
+            if [ ! -f .env ]; then
+              if [ -f .env.production ]; then
+                cp .env.production .env
+              else
+                echo "警告：未找到 .env 文件，请手动配置"
+                exit 1
+              fi
+            fi
+
+            # 创建必要的目录
+            mkdir -p backups nginx/ssl logs
+
+            # 构建并启动服务
+            docker compose build
+            docker compose up -d
+
+            # 等待服务启动
+            sleep 15
+
+            # 检查服务状态
+            docker compose ps
+
+            # 清理临时文件
+            rm -f /tmp/deploy-package.tar.gz
+
+            echo "部署完成！"
+            echo "访问地址：http://14.103.72.48"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/ai-review-system
+            echo "=== 服务状态 ==="
+            docker compose ps
+            echo ""
+            echo "=== 最近日志 ==="
+            docker compose logs --tail=50
